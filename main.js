@@ -48,6 +48,20 @@ function parse_array(input){
 }
 
 /**
+ * parses the string and calls the functions 
+ * main functionality function
+ * @param {String} input string to parse
+ */
+ function parse_function(input){
+    let function_name = input.slice(0, input.indexOf("(")).trim();
+    let param = string_to_param(input.slice(input.indexOf("(") + 1 , input.lastIndexOf(")")));    
+
+    param = parse_param(param);
+
+    return window[function_name](param);
+}
+
+/**
  * 
  * @param {String} param string with parameters
  * @returns {Array} array of parameters
@@ -56,30 +70,49 @@ function parse_param(param){
     let i = 0;
 
     while(i < param.length){
-        param[i] = param[i].trimStart();
-        if(param[i].charAt(0) == "["){
+        if(param[i].trim().charAt(0) == "["){           //is array
             param[i] = parse_array(param[i]);
-        }else if(param[i].charAt(0) != "\"" && param[i].includes("(")){
+        }else if(is_function(param[i])){                //is function
             param[i] = parse_function(param[i]);
-        }
+        }/*else if(){
+            //TODO
+            //equation
+        }*/
         i++;
     }
     return param;
 }
 
 /**
- * parses the string and calls the functions 
- * main functionality function
- * @param {String} input string to parse
+ * test if input is a function
+ * @param {String} string 
  */
-function parse_function(input){
-    let function_name = input.slice(0, input.indexOf("("));
-    let param = string_to_param(input.slice(input.indexOf("(") + 1 , input.lastIndexOf(")")));    
+ function is_function(string){
+    string.trim();
+    let result = 0;
+    if(string.match(/^ *[A-Za-z]*\(/gm)){ 
+        let pl = 1;
+        let i = string.indexOf("(") + 1;
+        let lock = 0;
 
-    param = parse_param(param);
-
-    return window[function_name](param);
-
+        while(i < string.length || pl > 0){ //counting () if number of ( in string = ) and ) is last char than string is function
+            if(!lock && string.charAt(i) == "("){
+                pl++;
+            }else if(!lock && string.charAt(i) == ")" ){
+                pl--;
+            }else if(specialchars.lock.includes(string.charAt(i))){
+                lock++;
+                lock=lock%2;
+            }else if(specialchars.escape.includes(string.charAt(i))){
+                i++;
+            }
+            i++;
+        }
+        if(i == string.length - 1 && pl == 0 && string.charAt(string.length) == ")"){
+            result = 1;
+        }
+    }
+    return result;
 }
 
 /**
