@@ -22,8 +22,33 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 for the JavaScript code in this page.
 */
 
-function suma(input){
-    if(typeof input == "Array"){
+/**
+* just testing function
+* @param {Array} arrayin array of input 
+* @returns {Array} =arrayin
+*/
+function test(arrayin){
+    return arrayin;
+}
 
+/**
+ * 
+ * @param {Array|Number} input 
+ */
+function suma(input){
+    let result = 0;
+    if(typeof input == "object"){
+        input.forEach(element => {
+            if(typeof element == "object"){
+                result = Number(result) + Number(suma(element));
+            }
+            if(!isNaN(element)){
+                result = Number(result) + Number(element);
+            }
+        })
     }
+    if(typeof input == "number"){
+        result = input;
+    }
+    return result;
 }

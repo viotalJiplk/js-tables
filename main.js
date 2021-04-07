@@ -26,14 +26,6 @@ const specialchars = {
     "lock":["\""],
     "escape":["\'"]
 }
-/**
- * just testing function
- * @param {Array} arrayin array of input 
- * @returns {Array} =arrayin
- */
-function test(arrayin){
-    return arrayin;
-}
 
 /**
  * main rendering function
@@ -67,7 +59,7 @@ function parse_param(param){
         param[i] = param[i].trimStart();
         if(param[i].charAt(0) == "["){
             param[i] = parse_array(param[i]);
-        }else if(param[i].charAt(0) != "\""){
+        }else if(param[i].charAt(0) != "\"" && param[i].includes("(")){
             param[i] = parse_function(param[i]);
         }
         i++;
