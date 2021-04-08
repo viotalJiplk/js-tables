@@ -22,29 +22,74 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 for the JavaScript code in this page.
 */
 
+//aliases
+function product(input){
+    return multiply(input);
+}
+//end of aliases 
+
 /**
 * just testing function
 * @param {Array} arrayin array of input 
 * @returns {Array} =arrayin
 */
+
 function test(arrayin){
     return arrayin;
 }
 
+function flatDeep(arr) {//should be remade
+    d = Infinity;
+    return d > 0 ? arr.reduce((acc, val) => acc.concat(Array.isArray(val) ? flatDeep(val, d - 1) : val), [])
+                 : arr.slice();
+ };
+
 /**
- * 
- * @param {Array|Number} input 
+ * sums all the number in Array (array in array will by sumed to)
+ * @param {Array|Number} input
+ * @returns {Number} sum of input
  */
 function sum(input){
     let result = 0;
+    input = flatDeep(input);
+    input.forEach(element => {
+        result = Number(result) + Number(element);
+    })
+    if(typeof input == "number"){
+        result = input;
+    }
+    return result;
+}
+
+/**
+ * substract all the number in Array from the first one (array in array will by used to to)
+ * @param {Array|Number} input
+ * @returns {Number}
+ */
+function substract(input){
+    let result = 0;
     if(typeof input == "object"){
+        input = flatDeep(input);
         input.forEach(element => {
-            if(typeof element == "object"){
-                result = Number(result) + Number(suma(element));
-            }
-            if(!isNaN(element)){
-                result = Number(result) + Number(element);
-            }
+            result = Number(result) - Number(element);
+        });
+    }else if(typeof input == "number"){
+        result = input;
+    }
+    return result;
+}
+
+/**
+ * multiply all the number in Array (array in array will by multiplyed to)
+ * @param {Array|Number} input
+ * @returns {Number} sum of input
+ */
+function multiply(input){
+    let result = 1;
+    if(typeof input == "object"){
+        input = flatDeep(input);
+        input.forEach(element => {
+            result = Number(result) * Number(element);
         })
     }
     if(typeof input == "number"){
@@ -53,27 +98,22 @@ function sum(input){
     return result;
 }
 
-function substract(input){
+/**
+ * devide all the number in Array from the first one (numbers in array will by used to to devide)
+ * @param {Array|Number} input
+ * @returns {Number}
+ */
+ function devide(input){
     let result = 0;
     if(typeof input == "object"){
-        if(input[0] != "undefined"){
-            if(typeof input[0] == "object"){
-                input[0].unshift(0);
-                result = Number(substract(input[0]));
-            }else if(!isNaN(input[0])){
-                result = Number(input[0]);
-            }
+        input = flatDeep(input);
+        if(typeof input[0] !== undefined){
+            result = input[0];
             input.shift();
         }
         input.forEach(element => {
-            if(typeof element == "object"){
-                element.unshift(0);
-                result = Number(result) + Number(substract(element));
-            }
-            if(!isNaN(element)){
-                result = Number(result) - Number(element);
-            }
-        })
+            result = Number(result) / Number(element);
+        });
     }else if(typeof input == "number"){
         result = input;
     }
