@@ -32,7 +32,7 @@ const specialchars = {
  * @param {String} id 
  */
 function input(id){
-    console.log(parse_function(document.getElementById(id).value));
+    console.log(function_or_pl(document.getElementById(id).value));
 }
 
 /**
@@ -72,12 +72,13 @@ function parse_param(param){
     while(i < param.length){
         if(param[i].trim().charAt(0) == "["){           //is array
             param[i] = parse_array(param[i]);
-        }else if(is_function(param[i])){                //is function
-            param[i] = parse_function(param[i]);
-        }/*else if(){
-            //TODO
-            //equation
-        }*/
+        }else{                //is function or expression
+            if(typeof param == "string"){
+                param = function_or_pl(param);
+            }else{
+                param[i] = function_or_pl(param[i]);
+            }
+        }
         i++;
     }
     return param;
@@ -87,15 +88,15 @@ function parse_param(param){
  * test if input is a function
  * @param {String} string 
  */
- function is_function(string){
+ function function_or_pl(string){
     string.trim();
-    let result = 0;
-    if(string.match(/^ *[A-Za-z]*\(/gm)){ 
+    //solves all () and function()
+    while(string.indexOf("(") != -1){ //should be done differently for negative numbers :D
         let pl = 1;
-        let i = string.indexOf("(") + 1;
+        let bgs = string.indexOf("(");   //technicaly cannot be -1 because of while above
+        let i = bgs + 1;
         let lock = 0;
-
-        while(i < string.length || pl > 0){ //counting () if number of ( in string = ) and ) is last char than string is function
+        while(i < string.length && !(pl == 0)){
             if(!lock && string.charAt(i) == "("){
                 pl++;
             }else if(!lock && string.charAt(i) == ")" ){
@@ -108,11 +109,46 @@ function parse_param(param){
             }
             i++;
         }
-        if(i == string.length - 1 && pl == 0 && string.charAt(string.length) == ")"){
-            result = 1;
+        let name_of_function = selectUntillLastNonabc(string, bgs)
+        let func_or_expr = string.slice(bgs, i);
+        if(name_of_function != ""){
+            func_or_expr = name_of_function + func_or_expr;
+            string = string.replace(func_or_expr, parse_function(func_or_expr));
+        }else{
+            string = string.replace(func_or_expr, parse_param(func_or_expr.slice(1, func_or_expr.length - 1)));
         }
     }
-    return result;
+    //now only expresion should stay
+    privil = string.match(/\d+\s*[\*\/]\s*\d+/);
+    while(privil !== null){
+        privil = privil[0];
+        let result = "";
+        if(privil.includes("*")){
+            let array = privil.split("*");
+            result = multiply(array);
+        }else if(privil.includes("/")){
+            let array = privil.split("/");
+            result = devide(array);
+        }
+        string = string.replace(privil, result)
+        privil = string.match(/\d+\s*[\*\/]\s*\d+/);
+    }
+    unprivil = string.match(/\d+\s*[\+\-]\s*\d+/);
+    while(unprivil !== null){
+        unprivil = unprivil[0];
+        let result = "";
+        if(unprivil.includes("+")){
+            let array = unprivil.split("+");
+            result = sum(array);
+        }else if(unprivil.includes("-")){
+            let array = unprivil.split("-");
+            result = substract(array);
+        }
+        string = string.replace(unprivil, result)
+        unprivil = string.match(/\d+\s*[\+\-]\s*\d+/);
+    }
+
+    return string;
 }
 
 /**
@@ -155,4 +191,21 @@ function string_to_param(string){
         param.push(last);
     }
     return param;
+}
+
+/**
+ * select the last alphabetical character before position in string
+ * @param {String} string string to process 
+ * @param {Number} pos index of position to begin on
+ * @returns {String} of alphabtical chracters before nonalphabetical
+ */
+function selectUntillLastNonabc(string, pos){
+    string = string.slice(0, pos);
+    let result = string.match(/[a-zA-Z]+$/);
+    if(result != null){
+        result = result[0];
+    }else{
+        result = "";
+    }
+    return result;
 }
