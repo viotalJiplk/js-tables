@@ -68,6 +68,10 @@ function sum(input){
  */
 function substract(input){
     let result = 0;
+    if(typeof input[0] !== undefined){
+        result = input[0];
+        input.shift();
+    }
     if(typeof input == "object"){
         input = flatDeep(input);
         input.forEach(element => {
