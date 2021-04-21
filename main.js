@@ -92,85 +92,119 @@ function parse_param(param){
     string.trim();
     // /\(\s*[\+\-](\d\s*)+\s*\)/g matches first (+-numbers)
     //solves all () and function()
-    let func = string.match(/[a-zA-Z]+\(/g);
-    while(func != null){
-        func = func[0];
-        let pl = 1;
-        let bgs = string.indexOf(func) + func.length;   //technicaly cannot be -1 because of while above
-        let i = bgs + 1;
-        let lock = 0;
-        while(i < string.length && !(pl == 0)){
-            if(!lock && string.charAt(i) == "("){
-                pl++;
-            }else if(!lock && string.charAt(i) == ")" ){
-                pl--;
-            }else if(specialchars.lock.includes(string.charAt(i))){
-                lock++;
-                lock=lock%2;
-            }else if(specialchars.escape.includes(string.charAt(i))){
+    {
+        const regex_func = /[a-zA-Z]+\(/g;
+        let func = string.match(regex_func);
+        while(func != null){
+            func = func[0];
+            let pl = 1;
+            let bgs = string.indexOf(func) + func.length;   //technicaly cannot be -1 because of while above
+            let i = bgs + 1;
+            let lock = 0;
+            while(i < string.length && !(pl == 0)){
+                if(!lock && string.charAt(i) == "("){
+                    pl++;
+                }else if(!lock && string.charAt(i) == ")" ){
+                    pl--;
+                }else if(specialchars.lock.includes(string.charAt(i))){
+                    lock++;
+                    lock=lock%2;
+                }else if(specialchars.escape.includes(string.charAt(i))){
+                    i++;
+                }
                 i++;
             }
-            i++;
+            //let name_of_function = selectUntillLastNonabc(string, bgs);
+            let name_of_function = func.substring(0, func.length - 1);
+            let func_or_expr = string.slice(bgs, i - 1);
+            let result = "";
+            if(name_of_function != ""){
+                func_or_expr = name_of_function + "(" + func_or_expr + ")";
+                result = parse_function(func_or_expr);
+                if(result < 0){
+                    result = "(" + result + ")";
+                }
+                string = string.replace(func_or_expr, result);
+            }else{
+                result = parse_param(func_or_expr.slice(1, func_or_expr.length - 1));
+                //I should test if Number is returned
+                if(result < 0){
+                    result = "(" + result + ")";
+                }
+                string = string.replace(func_or_expr, result);
+            }
+            func = string.match(regex_func);
         }
-        let name_of_function = selectUntillLastNonabc(string, bgs)
-        let func_or_expr = string.slice(bgs, i);
-        if(name_of_function != ""){
-            func_or_expr = name_of_function + func_or_expr;
-            string = string.replace(func_or_expr, parse_function(func_or_expr));
-        }else{
-            string = string.replace(func_or_expr, parse_param(func_or_expr.slice(1, func_or_expr.length - 1)));
-        }
-        func = string.match(/[a-zA-Z]+\(/g);
     }
     //now only expresion should stay
     //solve all multiplications
+    let regex_number = /(\d\s*)|((?<=\()(\s*[\+\-]\s*(\d\s*)+)(?=\)))/gm;
     {
-        let multiplic = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\*]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        const regex_multiply = /\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\*]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m;
+        let multiplic = string.match(regex_multiply);
         while(multiplic !== null){
             multiplic = multiplic[0];
             let result = "";
-            let array = multiplic.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/gm);
+            let array = multiplic.match(regex_number);
             result = multiply(array);
-            string = string.replace(multiplic, result)
-            multiplic = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\*]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+            if(result < 0){
+                result = "(" + result + ")";
+            }
+            string = string.replace(multiplic, result);
+            multiplic = string.match(regex_multiply);
         }
     }
     //solve all divisions
     {
-        let division = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\/]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        const regex_division = /\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\/]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m;
+        let division = string.match(regex_division);
         while(division !== null){
             division = division[0];
             let result = "";
-            let array = division.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/gm);
+            let array = division.match(regex_number);
             result = divide(array);
-            string = string.replace(division, result)
-            division = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\/]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+            if(result < 0){
+                result = "(" + result + ")";
+            }
+            string = string.replace(division, result);
+            division = string.match(regex_division);
         }
     }
     //solve all sums
     {
-        let suma = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\+]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        const regex_sum = /\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\+]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m;
+        let suma = string.match(regex_sum);
         while(suma !== null){
             suma = suma[0];
             let result = "";
-            let array = suma.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/gm);
+            let array = suma.match(regex_number);
             result = sum(array);
-            string = string.replace(suma, result)
-            suma = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\+]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+            if(result < 0){
+                result = "(" + result + ")";
+            }
+            string = string.replace(suma, result);
+            suma = string.match(regex_sum);
         }
     }
     //solve all subtractions
     {
-        let substraction = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\-]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        const regex_substract = /\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\-]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m;
+        let substraction = string.match(regex_substract);
         while(substraction !== null){
             substraction = substraction[0];
             let result = "";
-            let array = substraction.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/gm);
+            let array = substraction.match(regex_number);
             result = substract(array);
-            string = string.replace(substraction, result)
-            substraction = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\-]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+            if(result < 0){
+                result = "(" + result + ")";
+            }
+            string = string.replace(substraction, result);
+            substraction = string.match(regex_substract);
         }
     }
+    string = string.replace("(", "");
+    string = string.replace(")", "");
+    //we should check there if thing witch we are returning is number (throw error if not)
     return string;
 }
 
