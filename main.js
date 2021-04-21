@@ -90,6 +90,10 @@ function parse_param(param){
  */
  function function_or_pl(string){
     string.trim();
+    const first_without_pl = string.match(/^\s*[\+\-](\d\s*)+(\.\s*(\d\s*)+)?/);
+    if(first_without_pl != null){
+        string = string.replace(/^\s*[\+\-](\d\s*)+(\.\s*(\d\s*)+)?/ ,"(" + first_without_pl[0] + ")");
+    }
     // /\(\s*[\+\-](\d\s*)+\s*\)/g matches first (+-numbers)
     //solves all () and function()
     {
@@ -138,9 +142,9 @@ function parse_param(param){
     }
     //now only expresion should stay
     //solve all multiplications
-    let regex_number = /(\d\s*)|((?<=\()(\s*[\+\-]\s*(\d\s*)+)(?=\)))/gm;
+    let regex_number = /(\d\s*)+(\.\s*(\d\s*)+)?|((?<=\()(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)(?=\)))/gm;
     {
-        const regex_multiply = /\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\*]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m;
+        const regex_multiply = /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\*]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m;
         let multiplic = string.match(regex_multiply);
         while(multiplic !== null){
             multiplic = multiplic[0];
@@ -156,7 +160,7 @@ function parse_param(param){
     }
     //solve all divisions
     {
-        const regex_division = /\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\/]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m;
+        const regex_division = /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\/]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m;
         let division = string.match(regex_division);
         while(division !== null){
             division = division[0];
@@ -172,7 +176,7 @@ function parse_param(param){
     }
     //solve all sums
     {
-        const regex_sum = /\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\+]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m;
+        const regex_sum = /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\+]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m;
         let suma = string.match(regex_sum);
         while(suma !== null){
             suma = suma[0];
@@ -188,7 +192,7 @@ function parse_param(param){
     }
     //solve all subtractions
     {
-        const regex_substract = /\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\-]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m;
+        const regex_substract = /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\-]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m;
         let substraction = string.match(regex_substract);
         while(substraction !== null){
             substraction = substraction[0];
