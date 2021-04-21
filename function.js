@@ -29,6 +29,20 @@ function product(input){
 //end of aliases 
 
 /**
+ * converts sth to number
+ * @param {String|Number} input
+ * @returns {Number}
+ */
+function toNumber(input){
+    let result = new Number;
+    if(typeof input == "number"){
+        result = input;
+    }else if(typeof input == "string"){
+        
+    }
+}
+
+/**
 * just testing function
 * @param {Array} arrayin array of input 
 * @returns {Array} =arrayin
@@ -103,11 +117,11 @@ function multiply(input){
 }
 
 /**
- * devide all the number in Array from the first one (numbers in array will by used to to devide)
+ * divide all the number in Array from the first one (numbers in array will by used to to divide)
  * @param {Array|Number} input
  * @returns {Number}
  */
- function devide(input){
+ function divide(input){
     let result = 0;
     if(typeof input == "object"){
         input = flatDeep(input);

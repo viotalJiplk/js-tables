@@ -90,10 +90,13 @@ function parse_param(param){
  */
  function function_or_pl(string){
     string.trim();
+    // /\(\s*[\+\-](\d\s*)+\s*\)/g matches first (+-numbers)
     //solves all () and function()
-    while(string.indexOf("(") != -1){ //should be done differently for negative numbers :D
+    let func = string.match(/[a-zA-Z]+\(/g);
+    while(func != null){
+        func = func[0];
         let pl = 1;
-        let bgs = string.indexOf("(");   //technicaly cannot be -1 because of while above
+        let bgs = string.indexOf(func) + func.length;   //technicaly cannot be -1 because of while above
         let i = bgs + 1;
         let lock = 0;
         while(i < string.length && !(pl == 0)){
@@ -117,37 +120,57 @@ function parse_param(param){
         }else{
             string = string.replace(func_or_expr, parse_param(func_or_expr.slice(1, func_or_expr.length - 1)));
         }
+        func = string.match(/[a-zA-Z]+\(/g);
     }
     //now only expresion should stay
-    privil = string.match(/\d+\s*[\*\/]\s*\d+/);
-    while(privil !== null){
-        privil = privil[0];
-        let result = "";
-        if(privil.includes("*")){
-            let array = privil.split("*");
+    //solve all multiplications
+    {
+        let multiplic = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\*]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        while(multiplic !== null){
+            multiplic = multiplic[0];
+            let result = "";
+            let array = multiplic.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/gm);
             result = multiply(array);
-        }else if(privil.includes("/")){
-            let array = privil.split("/");
-            result = devide(array);
+            string = string.replace(multiplic, result)
+            multiplic = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\*]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
         }
-        string = string.replace(privil, result)
-        privil = string.match(/\d+\s*[\*\/]\s*\d+/);
     }
-    unprivil = string.match(/\d+\s*[\+\-]\s*\d+/);
-    while(unprivil !== null){
-        unprivil = unprivil[0];
-        let result = "";
-        if(unprivil.includes("+")){
-            let array = unprivil.split("+");
+    //solve all divisions
+    {
+        let division = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\/]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        while(division !== null){
+            division = division[0];
+            let result = "";
+            let array = division.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/gm);
+            result = divide(array);
+            string = string.replace(division, result)
+            division = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\/]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        }
+    }
+    //solve all sums
+    {
+        let suma = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\+]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        while(suma !== null){
+            suma = suma[0];
+            let result = "";
+            let array = suma.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/gm);
             result = sum(array);
-        }else if(unprivil.includes("-")){
-            let array = unprivil.split("-");
-            result = substract(array);
+            string = string.replace(suma, result)
+            suma = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\+]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
         }
-        string = string.replace(unprivil, result)
-        unprivil = string.match(/\d+\s*[\+\-]\s*\d+/);
     }
-
+    //solve all subtractions
+    {
+        let substraction = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\-]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        while(substraction !== null){
+            substraction = substraction[0];
+            let result = "";
+            let array = substraction.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/gm);
+            result = substract(array);
+            string = string.replace(substraction, result)
+            substraction = string.match(/\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))[\-]\s*((\d\s*)|(\(\s*[\+\-]\s*(\d\s*)+)\))/m);
+        }
+    }
     return string;
 }
 
