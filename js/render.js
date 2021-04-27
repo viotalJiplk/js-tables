@@ -23,10 +23,63 @@ for the JavaScript code in this page.
 */
 
 /**
- * Gerates an empty table
+ * Generates an empty table element
+ * @param {Number} width Table width...
+ * @param {Number} height Table hight...
+ * @returns {Element} Pregenerated table of defined size
  */
-function generateTable(x,y){
-    while(){
+function generateTable(width, height) {
+    var en_alphabeth = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
+    var table = document.createElement("table");
+
+    for (var row_number = 0; row_number <= width; row_number++) {
+
+        let row = table.insertRow(row_number);
+        var th = document.createElement('th');
+
+        if (row_number > 0) {
+            th.innerHTML = row_number;
+        }else{
+            th.innerHTML = "*";
+            th.style.zIndex = "9999";
+        }
+
+        row.appendChild(th);
+
+        for (var column_number = 1; column_number <= height; column_number++) {
+            
+            console.log(column_number);
+
+            // if it's the first row insert alphabetical header
+            // TODO
+            if (row_number == 0) {
+                var th = document.createElement('th');
+                th.innerHTML = column_number;
+                row.appendChild(th);
+            }else{
+                var cell = row.insertCell(column_number);
+            }
+        }
     }
+    console.log("end of cycle");
+    return table;
 }
+
+/**
+ * Appends empty table to 
+ * @param {Element} element The element you wat to append the table to
+ * @param {Number} width Table width...
+ * @param {Number} height Table hight...
+ * @returns {*} Appends pregenerated table of defined size to selected element.
+ */
+function appendTable(element,width,height){
+    // attempt to clean input type?
+    // element = Element(element);
+    element.appendChild(generateTable(width,height));
+}
+
+appendTable(document.body,100,100);
+/*
+console.log(document.getElementsByName(body));
+*/

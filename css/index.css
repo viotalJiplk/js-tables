@@ -1,0 +1,83 @@
+html {
+    background-color: rgb(43, 43, 43);
+    color: aquamarine;
+    font-weight: 50;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+    color: aquamarine;
+}
+
+h1 {
+    margin: 0.8em 0 1em 0;
+    text-align: center;
+}
+
+p {
+    color: aquamarine;
+}
+
+.mainContent {
+    /*border: 0.1em solid rgb(112, 255, 200);*/
+    width: 90%;
+    margin: 0 auto;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.inputRow,
+button {
+    margin: 0.8em;
+}
+
+th {
+    background-color: rgb(77, 77, 77);
+    top: 0;
+    left: 0;
+    position: sticky;
+    z-index: 999;
+}
+
+td {
+    border: 0.04em solid rgb(109, 109, 109);
+}
+
+#tableWrapper {
+    width: 100%;
+    height: 90vh;
+    position: relative;
+    overflow: scroll;
+    border: 0.04em solid rgb(143, 143, 143);
+}
+
+#theTable {
+    max-width: 100%;
+    max-height: 100%;
+    bottom: 0;
+    top: 0;
+    position: absolute;
+}
+
+table tr:nth-child(even) {
+    background-color: rgb(53, 53, 53);
+}
+
+td,
+th {
+    text-align: center;
+    padding: 0.2em;
+}
+
+table,
+th,
+td {
+    border-collapse: collapse;
+}
