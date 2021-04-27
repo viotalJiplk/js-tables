@@ -29,7 +29,7 @@ for the JavaScript code in this page.
  * @returns {Element} Pregenerated table of defined size
  */
 function generateTable(width, height) {
-    var en_alphabeth = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+    // TODO var en_alphabeth = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
     var table = document.createElement("table");
 
@@ -49,8 +49,6 @@ function generateTable(width, height) {
 
         for (var column_number = 1; column_number <= height; column_number++) {
             
-            console.log(column_number);
-
             // if it's the first row insert alphabetical header
             // TODO
             if (row_number == 0) {
@@ -62,7 +60,6 @@ function generateTable(width, height) {
             }
         }
     }
-    console.log("end of cycle");
     return table;
 }
 
