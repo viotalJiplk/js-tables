@@ -23,20 +23,24 @@ for the JavaScript code in this page.
 */
 
 /**
- * Generates an empty table element
- * @param {Number} width Table width...
- * @param {Number} height Table hight...
- * @returns {Element} Pregenerated table of defined size
+ * Generates an empty spreadsheet element
+ * @param {Number} width Spreadsheet width...
+ * @param {Number} height Spreadsheet hight...
+ * @returns {Element} Pregenerated spreadsheet of defined size
  */
-function generateTable(width, height) {
+function generateSpreadsheet(width, height) {
     // TODO var en_alphabeth = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
-    var table = document.createElement("table");
+    var spreadsheet = document.createElement("div");
+    spreadsheet.className = "spreadsheet";
+    spreadsheet.id = "spreadsheet";
 
-    for (var row_number = 0; row_number <= width; row_number++) {
+    for (var row_number = 0; row_number <= height; row_number++) {
+        column_number = 0;
 
-        let row = table.insertRow(row_number);
-        var th = document.createElement('th');
+        var th = document.createElement('div');
+        th.className = "spreadsheet-header";
+        th.id = "th"+row_number;
 
         if (row_number > 0) {
             th.innerHTML = row_number;
@@ -45,38 +49,52 @@ function generateTable(width, height) {
             th.style.zIndex = "9999";
         }
 
-        row.appendChild(th);
+        th.style.gridColumnStart=column_number+1;
+        th.style.gridRowStart=row_number+1;
+        spreadsheet.appendChild(th);
 
-        for (var column_number = 1; column_number <= height; column_number++) {
+        for (var column_number = 1; column_number <= width; column_number++) {
             
             // if it's the first row insert alphabetical header
             // TODO
             if (row_number == 0) {
-                var th = document.createElement('th');
+                var th = document.createElement('div');
                 th.innerHTML = column_number;
-                row.appendChild(th);
+                th.className = "spreadsheet-header";
+                th.id = "th"+column_number;
+
+                th.style.gridColumnStart=column_number+1;
+                th.style.gridRowStart=row_number+1;
+                spreadsheet.appendChild(th);
             }else{
-                var cell = row.insertCell(column_number);
+                var cell = document.createElement('div');
+                cell.className = "spreadsheet-cell";
+                cell.id = "cell"+column_number+"-"+row_number;
+                // cell.innerHTML = "-"; //For testing
+
+                cell.style.gridColumnStart=column_number+1;
+                cell.style.gridRowStart=row_number+1;
+                spreadsheet.appendChild(cell);
             }
         }
     }
-    return table;
+    return spreadsheet;
 }
 
 /**
- * Appends empty table to 
- * @param {Element} element The element you wat to append the table to
- * @param {Number} width Table width...
- * @param {Number} height Table hight...
- * @returns {*} Appends pregenerated table of defined size to selected element.
+ * Appends empty spreadsheet to 
+ * @param {Element} element The element you wat to append the spreadsheet to
+ * @param {Number} width Spreadsheet width...
+ * @param {Number} height Spreadsheet hight...
+ * @returns {*} Appends pregenerated spreadsheet of defined size to selected element.
  */
-function appendTable(element,width,height){
+function appendSpreadsheet(element,width,height){
     // attempt to clean input type?
     // element = Element(element);
-    element.appendChild(generateTable(width,height));
+    element.appendChild(generateSpreadsheet(width,height));
 }
 
-appendTable(document.body,100,100);
+appendSpreadsheet(document.getElementById("spreadsheet-wrapper"),50,500);
 /*
 console.log(document.getElementsByName(body));
 */
