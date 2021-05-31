@@ -1,0 +1,80 @@
+html {
+    background-color: rgb(43, 43, 43);
+    color: aquamarine;
+    font-weight: 50;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+    color: aquamarine;
+}
+
+h1 {
+    margin: 0.8em 0 1em 0;
+    text-align: center;
+}
+
+p {
+    color: aquamarine;
+}
+
+/* UNUSED
+.main-content {
+    // border: 0.1em solid rgb(112, 255, 200);
+    width: 90%;
+    margin: 0 auto;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+*/
+
+.inputRow,
+button {
+    margin: 0.8em;
+}
+
+.spreadsheet-header {
+    background-color: rgb(77, 77, 77);
+    border: 0.05em solid rgb(143, 143, 143);
+    top: 0;
+    left: 0;
+    position: sticky;
+    z-index: 999;
+
+    width: 5em;
+}
+
+.spreadsheet-cell {
+    background-color: rgb(53, 53, 53);
+    margin: 0.05em;
+}
+
+#spreadsheet-wrapper {
+    width: 100%;
+    height: 90vh;
+    position: relative;
+    overflow: scroll;
+    border: 0.04em solid rgb(143, 143, 143);
+}
+
+#spreadsheet {
+    left: 0;
+    top: 0;
+    position: absolute;
+    display: grid;
+    /*grid-template-columns: 5em,5em,5em,5em,5em,5em,5em,5em,5em,5em;
+    grid-template-rows: 2em,2em,2em,2em,2em,2em,2em,2em,2em,2em;*/
+    grid-template-columns: repeat(5em);
+    grid-template-rows: repeat(2em);
+    /*column-gap: 0.1em;
+    row-gap: 0.1em;*/
+
+    background-color: rgb(109, 109, 109);
+}
