@@ -22,11 +22,31 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 for the JavaScript code in this page.
 */
 
-/**
+const en_alphabeth = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+
+function getBaseLog(x, y) {
+    return Math.log(y) / Math.log(x);
+}  
+
+//stolen from https://github.com/alexfeseto/hexavigesimal/blob/master/hexavigesimal.js
+Number.prototype.toBijectiveBase26 = (function () {
+    return function toBijectiveBase26() {
+      n = this + 1
+      ret = "";
+      while(parseInt(n)>0){
+        --n;
+        ret += String.fromCharCode("A".charCodeAt(0)+(n%26));
+        n/=26;
+      }
+      return ret.split("").reverse().join("");
+    };
+}());
+
+ /**
  * Generates an empty spreadsheet element
  * @param {Number} width Spreadsheet width...
  * @param {Number} height Spreadsheet hight...
- * @returns {Element} Pregenerated spreadsheet of defined size
+ * @returns {HTMLDivElement} Pregenerated spreadsheet of defined size
  */
 function generateSpreadsheet(width, height) {
     // TODO var en_alphabeth = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
@@ -59,7 +79,7 @@ function generateSpreadsheet(width, height) {
             // TODO
             if (row_number == 0) {
                 var th = document.createElement('div');
-                th.innerHTML = column_number;
+                th.innerHTML = Number(column_number-1).toBijectiveBase26(); //-1 beccause first column does not count (there is just number of row - no data)
                 th.className = "spreadsheet-header";
                 th.id = "th"+column_number;
 
@@ -94,7 +114,7 @@ function appendSpreadsheet(element,width,height){
     element.appendChild(generateSpreadsheet(width,height));
 }
 
-appendSpreadsheet(document.getElementById("spreadsheet-wrapper"),50,500);
+appendSpreadsheet(document.getElementById("spreadsheet-wrapper"),1000,1);
 /*
 console.log(document.getElementsByName(body));
 */
