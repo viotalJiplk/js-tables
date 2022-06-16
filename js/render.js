@@ -22,6 +22,37 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 for the JavaScript code in this page.
 */
 
+// superglobals
+let active = document.createElement("p");
+
+/**
+ * function to interface with interpreter to compute the output
+ * @param {String} string input string for interpreter
+ */
+async function submit(string){
+    let result = function_or_pl(string);
+    console.log(result);
+}
+
+/**
+ * tests if you clicked out of input tag and if you had processes the change
+ * @param {Event} event 
+ */
+function testtosubmit(event){
+    if(event.target !== active){
+        if(active.nodeName =="INPUT"){
+            if(active.value[0] == "="){
+                submit(active.value.slice(1));
+            }
+        }
+        active = event.target;
+    }
+}
+
+document.addEventListener("click", function(e){
+    testtosubmit(e);
+})
+
 function getBaseLog(x, y) {
     return Math.log(y) / Math.log(x);
 }  
@@ -93,9 +124,6 @@ function generateSpreadsheet(width, height) {
         spreadsheet.appendChild(th);
 
         for (var column_number = 1; column_number <= width; column_number++) {
-            
-            // if it's the first row insert alphabetical header
-            // TODO
             if (row_number == 0) {
                 var th = document.createElement('div');
                 th.innerHTML = Number(column_number-1).toBijectiveBase26(); //-1 beccause first column does not count (there is just number of row - no data)
@@ -106,9 +134,15 @@ function generateSpreadsheet(width, height) {
                 th.style.gridRowStart=row_number+1;
                 spreadsheet.appendChild(th);
             }else{
-                var cell = document.createElement('div');
+                let input = document.createElement('input'); 
+                input.addEventListener("click", function(e) {
+                    testtosubmit(e);
+                });
+                
+                let cell = document.createElement('div');
                 cell.className = "spreadsheet-cell";
                 cell.id = "cell"+column_number+"-"+row_number;
+                cell.appendChild(input);
                 // cell.innerHTML = "-"; //For testing
 
                 cell.style.gridColumnStart=column_number+1;
@@ -133,7 +167,7 @@ function appendSpreadsheet(element,width,height){
     element.appendChild(generateSpreadsheet(width,height));
 }
 
-appendSpreadsheet(document.getElementById("spreadsheet-wrapper"),1000,1);
+appendSpreadsheet(document.getElementById("spreadsheet-wrapper"),50,50);
 /*
 console.log(document.getElementsByName(body));
 */
