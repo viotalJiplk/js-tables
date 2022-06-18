@@ -22,6 +22,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 for the JavaScript code in this page.
 */
 
+//todo move to json config file
+core = new CoreFunctions;
+functionfeaturelist = [new CoreFunctions];
+
 const specialchars = {
     "lock":["\""],
     "escape":["\'"]
@@ -53,12 +57,25 @@ function parse_array(input){
  * @param {String} input string to parse
  */
  function parse_function(input){
+    let result;
+    let sucess = 0;
     let function_name = input.slice(0, input.indexOf("(")).trim();
     let param = string_to_param(input.slice(input.indexOf("(") + 1 , input.lastIndexOf(")")));    
 
     param = parse_param(param);
-
-    return window[function_name](param);
+    
+    let i = 0;
+    while(i < functionfeaturelist.length & !sucess){
+        if(function_name in functionfeaturelist[i]){
+            result = functionfeaturelist[i][function_name](param);
+            sucess = 1;
+        }
+        i++;
+    }
+    if(!sucess){
+        throw new Error("Function \"" + function_name + "\" does not exist");
+    }
+    return result;
 }
 
 /**

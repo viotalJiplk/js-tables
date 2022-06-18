@@ -22,16 +22,41 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 for the JavaScript code in this page.
 */
 
+const render = {
+    regex:{
+        A1: /[A-Z]+\d+/,
+        A1column: /[A-Z]+/,
+        A1row: /\d+/,
+        A1range: /[A-Z]+\d+:[A-Z]+\d+/
+    }
+}
+render.onchange = function(e){
+    if(e.type == "contentArrayChange"){
+        console.log(e.data);
+        let column = Number().fromBijectiveBase26(e.data.location.match(this.regex.A1column));
+        let row = Number(e.data.location.match(this.regex.A1row));
+        let i = 0;
+        while(i<e.data.changed.length){
+            let j=0;
+            while(j<e.data.changed[i].length){
+                    document.getElementById(Number(column+i).toBijectiveBase26()+String(row +j)).firstElementChild.value = e.data.changed[i][j];
+                j++;
+            }
+            i++;
+        }
+    }
+}
+
+
 // superglobals
 let active = document.createElement("p");
 
 /**
  * function to interface with io js to compute the output
- * @param {*} cellcontent cell content
- * @param {HTMLInputElement} node node to write the result into
+ * @param {Array} cellcontent cell content
  */
-async function submit(cellcontent, node){
-    node.value=sheet1.setCellContent(active.parentElement.id ,cellcontent);
+async function submit(cellcontent, location){
+    sheet1.onchange(new msgev("contentArrayChange", {"location":location, "changed": cellcontent}));
 }
 /**
  * tests if you clicked out of input tag and if you had processes the change
@@ -40,14 +65,15 @@ async function submit(cellcontent, node){
 function testtosubmit(event){
     if(event.target !== active){
         if(active.nodeName =="INPUT"){
-            submit(active.value, active);
+            submit([[active.value]], active.parentElement.id);
         }
         if(event.target.nodeName == "INPUT"){
-            event.target.value = sheet1.getCellContent(event.target.parentElement.id);
+            sheet1.onchange(new msgev("contentRangeDiscovery", {"locationrange":event.target.parentElement.id}));
         }
         active = event.target;
     }
 }
+
 
 document.addEventListener("click", function(e){
     testtosubmit(e);
@@ -89,8 +115,8 @@ function generateSpreadsheet(width, height) {
         th.style.gridRowStart=row_number+1;
         spreadsheet.appendChild(th);
 
-        for (var column_number = 1; column_number <= width; column_number++) {
-            let column = Number(column_number-1).toBijectiveBase26() //-1 beccause first column does not count (there is just number of row - no data)
+        for (let column_number = 1; column_number <= width; column_number++) {
+            let column = Number(column_number).toBijectiveBase26()
             if (row_number == 0) {
                 let th = document.createElement('div');
                 th.innerHTML = column;

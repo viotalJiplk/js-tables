@@ -22,11 +22,11 @@ Number.prototype.fromBijectiveBase26 = (function(string){
 //stolen from https://github.com/alexfeseto/hexavigesimal/blob/master/hexavigesimal.js
 Number.prototype.toBijectiveBase26 = (function () {
     return function toBijectiveBase26() {
-      n = this + 1
+      n = this+1;
       ret = "";
       while(parseInt(n)>0){
         --n;
-        ret += String.fromCharCode("A".charCodeAt(0)+(n%26));
+        ret += String.fromCharCode("A".charCodeAt(0)+(n%26)-1);
         n/=26;
       }
       return ret.split("").reverse().join("");
