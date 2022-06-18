@@ -31,7 +31,7 @@ let active = document.createElement("p");
  * @param {HTMLInputElement} node node to write the result into
  */
 async function submit(cellcontent, node){
-    node.value=sheet1.setCellcontent(active.parentElement.id ,cellcontent);
+    node.value=sheet1.setCellContent(active.parentElement.id ,cellcontent);
 }
 /**
  * tests if you clicked out of input tag and if you had processes the change
@@ -43,7 +43,7 @@ function testtosubmit(event){
             submit(active.value, active);
         }
         if(event.target.nodeName == "INPUT"){
-            event.target.value = sheet1.getCellcontent(event.target.parentElement.id);
+            event.target.value = sheet1.getCellContent(event.target.parentElement.id);
         }
         active = event.target;
     }
