@@ -26,14 +26,13 @@ for the JavaScript code in this page.
 let active = document.createElement("p");
 
 /**
- * function to interface with interpreter to compute the output
- * @param {String} string input string for interpreter
+ * function to interface with io js to compute the output
+ * @param {*} cellcontent cell content
+ * @param {HTMLInputElement} node node to write the result into
  */
-async function submit(string){
-    let result = function_or_pl(string);
-    console.log(result);
+async function submit(cellcontent, node){
+    node.value=sheet1.setCellcontent(active.parentElement.id ,cellcontent);
 }
-
 /**
  * tests if you clicked out of input tag and if you had processes the change
  * @param {Event} event 
@@ -41,9 +40,10 @@ async function submit(string){
 function testtosubmit(event){
     if(event.target !== active){
         if(active.nodeName =="INPUT"){
-            if(active.value[0] == "="){
-                submit(active.value.slice(1));
-            }
+            submit(active.value, active);
+        }
+        if(event.target.nodeName == "INPUT"){
+            event.target.value = sheet1.getCellcontent(event.target.parentElement.id);
         }
         active = event.target;
     }
@@ -57,40 +57,6 @@ function getBaseLog(x, y) {
     return Math.log(y) / Math.log(x);
 }  
 
-// inspiration https://github.com/ptrkcsk/BB26/blob/main/source/to-decimal.ts
-Number.prototype.fromBijectiveBase26 = (function(string){
-	if (!/[A-Z]/.test(string)) {
-		throw new Error('String must contain only upper-case characters');
-	}
-
-	let number = 0;
-
-	for(let i = 0; i < string.length; i++) {
-		const char = string[string.length - i - 1];
-        if(i == 0){
-            number += Number((char.charCodeAt(0) - 'A'.charCodeAt(0)) + 1);
-        }else{
-		    number += Number(26 * i * ((char.charCodeAt(0) - 'A'.charCodeAt(0)) + 1));
-        }
-    }
-
-	return Number(number);
-});
-
-
-//stolen from https://github.com/alexfeseto/hexavigesimal/blob/master/hexavigesimal.js
-Number.prototype.toBijectiveBase26 = (function () {
-    return function toBijectiveBase26() {
-      n = this + 1
-      ret = "";
-      while(parseInt(n)>0){
-        --n;
-        ret += String.fromCharCode("A".charCodeAt(0)+(n%26));
-        n/=26;
-      }
-      return ret.split("").reverse().join("");
-    };
-}());
 
  /**
  * Generates an empty spreadsheet element
@@ -124,11 +90,12 @@ function generateSpreadsheet(width, height) {
         spreadsheet.appendChild(th);
 
         for (var column_number = 1; column_number <= width; column_number++) {
+            let column = Number(column_number-1).toBijectiveBase26() //-1 beccause first column does not count (there is just number of row - no data)
             if (row_number == 0) {
-                var th = document.createElement('div');
-                th.innerHTML = Number(column_number-1).toBijectiveBase26(); //-1 beccause first column does not count (there is just number of row - no data)
+                let th = document.createElement('div');
+                th.innerHTML = column;
                 th.className = "spreadsheet-header";
-                th.id = "th"+column_number;
+                th.id = "th"+column;
 
                 th.style.gridColumnStart=column_number+1;
                 th.style.gridRowStart=row_number+1;
@@ -140,8 +107,8 @@ function generateSpreadsheet(width, height) {
                 });
                 
                 let cell = document.createElement('div');
-                cell.className = "spreadsheet-cell";
-                cell.id = "cell"+column_number+"-"+row_number;
+                cell.className = "spreadsheet-cell " +column + " "+ row_number;
+                cell.id = column+row_number;
                 cell.appendChild(input);
                 // cell.innerHTML = "-"; //For testing
 
