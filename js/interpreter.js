@@ -101,6 +101,11 @@ function parse_param(param){
     return param;
 }
 
+function input(string){
+    //moves string out of string
+    let strings = []      
+}
+
 /**
  * test if input is a function
  * @param {String} string 

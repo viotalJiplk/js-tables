@@ -1,0 +1,38 @@
+.spreadsheet-header {
+    background-color: rgb(77, 77, 77);
+    border: 0.05em solid rgb(143, 143, 143);
+    top: 0;
+    left: 0;
+    position: sticky;
+    z-index: 999;
+
+    min-width: 5em;
+}
+
+.spreadsheet-cell {
+    background-color: rgb(53, 53, 53);
+    margin: 0.05em;
+}
+
+.spreadsheet-cell input{
+    background-color: rgb(53, 53, 53);
+    margin: 0.0em;
+    border: none;
+    width: auto;
+    color: white;
+}
+
+#spreadsheet {
+    left: 0;
+    top: 0;
+    position: absolute;
+    display: grid;
+    /*grid-template-columns: 5em,5em,5em,5em,5em,5em,5em,5em,5em,5em;
+    grid-template-rows: 2em,2em,2em,2em,2em,2em,2em,2em,2em,2em;*/
+    grid-template-columns: repeat(5em);
+    grid-template-rows: repeat(2em);
+    /*column-gap: 0.1em;
+    row-gap: 0.1em;*/
+
+    background-color: rgb(109, 109, 109);
+}

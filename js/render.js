@@ -33,9 +33,8 @@ class Sheetelem extends HTMLElement{
         this.root_element = this;
         let link = document.createElement("link");
         link.setAttribute("rel","stylesheet");
-        link.setAttribute("href", "css/index.css");
+        link.setAttribute("href", "css/spreadsheet.css");
         this.shadowRoot.append(this.generateSpreadsheet(50,50, sheetid), link);
-        //this.addEventListener("click", this.testtosubmit);
     }
 
     onchange = function(e){
