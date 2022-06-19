@@ -30,14 +30,19 @@ Number.prototype.fromBijectiveBase26 = (function(string){
 
 //stolen from https://github.com/alexfeseto/hexavigesimal/blob/master/hexavigesimal.js
 Number.prototype.toBijectiveBase26 = (function () {
-    return function toBijectiveBase26() {
-      n = this+1;
-      ret = "";
-      while(parseInt(n)>0){
+  return function toBijectiveBase26() {
+    n = this
+    ret = "";
+    while(parseInt(n)>0){
+      if(n>26){
         --n;
-        ret += String.fromCharCode("A".charCodeAt(0)+(n%26)-1);
+        ret += String.fromCharCode("A".charCodeAt(0)+(n%26));
         n/=26;
+      }else{
+        ret += String.fromCharCode("A".charCodeAt(0)+(n%27)-1);
+        n=0;
       }
-      return ret.split("").reverse().join("");
-    };
+    }
+    return ret.split("").reverse().join("");
+  };
 }());

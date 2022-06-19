@@ -46,14 +46,17 @@ class CoreFunctions{
         return Math.log(y) / Math.log(x);
     }  
 
-    /**
-    * just testing function
-    * @param {Array} arrayin array of input 
-    * @returns {Array} =arrayin
-    */
-
-    test(arrayin){
-        return arrayin;
+    RANDOM(input){
+        input = this.flatDeep(input);
+        let to_return = []; 
+        for(let i=0; i<input[0]; i++){
+            let row = [];
+            for(let j=0; j<input[0]; j++){
+                row.push(Math.random());
+            }
+            to_return.push(row); 
+        }
+        return to_return; 
     }
 
     flatDeep(arr) {//should be remade

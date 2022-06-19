@@ -73,7 +73,10 @@ class Sheet{
      * @param {String} locationrange A1 notation of cellrange or 1 cell
      */
     deleteCellRange(locationrange){
-        return this.#agregateListFromA1(locationrange, this.#deleteCell);
+        let locationarray = this.#agregateListFromA1(locationrange);
+        locationarray.forEach(element => {
+            this.#deleteCell(element);
+        });
     }
 
     /**
@@ -82,21 +85,45 @@ class Sheet{
      * @param {Array} new_content new content of cell 
      */
     setCellRangeContent(location, new_content){
-        let result = [];
         let column = Number().fromBijectiveBase26(location.match(shared.regex.A1column));
         let row = Number(location.match(shared.regex.A1row));
+        let max_index = [column + new_content.length-1, row + new_content[0].length-1];
         let i=0;
         while(i<new_content.length){
-            let columns = [];
             let j=0;
             while(j<new_content[0].length){
-                columns.push(this.#setCellContent(Number(column+i).toBijectiveBase26() + String(row+j), new_content[i][j]));
+                this.#setCellContent(Number(column+i).toBijectiveBase26() + String(row+j), new_content[i][j]);
+                let computed = this.#compute(new_content[i][j]);
+                if(typeof computed == "object"){
+                    if(computed.length + column > max_index[0]){
+                        max_index[0] = computed.length + column;
+                    }
+                    for (let k = 0; k < computed.length; k++) {
+                        if(typeof computed == "object"){
+                            if(computed[k].length + row > max_index[1]){
+                                max_index[1] = computed.length + row;
+                            }
+                            for(let l = 0; l < computed.length; l++) {
+                                if(!(l == 0 & k == 0)){
+                                    this.#setCellContent(Number(column+i+k).toBijectiveBase26() + String(row+j+l), computed[k][l]);
+                                }
+                                this.#setCellCacheContent(Number(column+i+k).toBijectiveBase26() + String(row+j+l), computed[k][l]);
+                            }
+                        }else{
+                            if(!(k == 0)){
+                                this.#setCellContent(Number(column+i+k).toBijectiveBase26() + String(row+j), computed[k]);
+                            }
+                            this.#setCellCacheContent(Number(column+i+k).toBijectiveBase26() + String(row+j), computed[k]);
+                        }
+                    }
+                }else{
+                    this.#setCellCacheContent(Number(column+i).toBijectiveBase26() + String(row+j), computed);
+                }
                 j++;
             }
-            result.push(columns);
             i++;
         }
-        return result;
+        return this.getCellRangeContent(Number(max_index[0]).toBijectiveBase26() + max_index[1] + ":" + Number(column).toBijectiveBase26() + row , 1);
         
     }
 
@@ -117,7 +144,11 @@ class Sheet{
         for(let i=0; i<locationarray.length; i++){
             let columns = [];
             for(let j=0; j<locationarray[i].length; j++){
-                columns.push(this.#getCellContent(locationarray[i][j], calc, reference));
+                if(calc === 1){
+                    columns.push(this.#getCellCacheContent(locationarray[i][j], reference, false));
+                }else{
+                    columns.push(this.#getCellContent(locationarray[i][j], calc, reference));
+                }
             }
             result.push(columns);
         }
@@ -134,16 +165,16 @@ class Sheet{
      */
     #getCellContent(location, calc=0, reference=undefined){
         if(this.#data.table[location] === undefined){
-            //the data has not yet been set
+            //the raw data has not yet been set
             return null;
         }else{
             let rawdata = this.#data.table[location].content;
             if(calc == 0){
                 return rawdata;
-            }else if(calc == 1){
-                return this.#getCellCacheContent(location, reference);
             }else{
-                return this.#compute(location, rawdata, reference);
+                let computed = this.#compute(rawdata, reference);
+                this.#setCellCacheContent(location, computed);
+                return computed;
             }
         }
     }
@@ -160,7 +191,7 @@ class Sheet{
             let cell = new Cell(new_content);
             this.#data.table[location] = cell;
         }
-        return this.#compute(location, new_content, undefined);
+        return;
     }
 
     /**
@@ -169,11 +200,9 @@ class Sheet{
      */
     #deleteCell(location){
         if(this.#data.table[location] !== undefined){
-            delete this.#data.cells[this.#data.table[location]];
             delete this.#data.table[location];
         }
         if(this.#cache.table[location] !== undefined){
-            delete this.#cache.cells[this.cache.table[location]];
             delete this.#cache.table[location];
         }
     }
@@ -201,14 +230,16 @@ class Sheet{
      */
     #getCellCacheContent(location, reference, recalc=true){
         if(this.#cache.table[location] !== undefined){
-            return this.#data.table[location].computedcontent;
+            return this.#cache.table[location].computedcontent;
         }else{
             if(recalc){
                 // have to calculate them
                 // get raw cell data
                 if(this.#data.table[location] !== undefined){
                     rawdata=this.#data.cells.computedcontent;
-                    return this.#compute(location, rawdata, reference);
+                    let computed = this.#compute(rawdata);
+                    this.#setCellCacheContent(location, computed);
+                    return computed;
                 }else{
                     return null;
                 }
@@ -225,10 +256,9 @@ class Sheet{
      * @param {*} reference 
      * @returns 
      */
-    #compute(location, string, reference){
+    #compute(string){
         if(string[0] == "="){
             let calculated = input(string.slice(1));
-            this.#setCellCacheContent(location, calculated);
             return calculated;
         }else{
             return string;
@@ -248,9 +278,9 @@ class Sheet{
             let columns = [Number().fromBijectiveBase26(points[0].match(shared.regex.A1column)), Number().fromBijectiveBase26(points[1].match(shared.regex.A1column))];
             let rows = [Number(points[0].match(shared.regex.A1row)), Number(points[1].match(shared.regex.A1row))];
             if(rows[0] > rows[1]){
-                let helper = row[0];
-                row[0]=row[1];
-                row[1]=helper;
+                let helper = rows[0];
+                rows[0]=rows[1];
+                rows[1]=helper;
             }
             if(columns[0] > columns[1]){
                 let helper = columns[0];
@@ -258,11 +288,11 @@ class Sheet{
                 columns[1]=helper;
             }
             for(let i = columns[0]; i <= columns[1]; i++){
-                let columns = Array();
+                let columnsArray = Array();
                 for(let j = rows[0]; j <= rows[1]; j++){
-                    columns.push(Number(i).toBijectiveBase26()+ j);
+                    columnsArray.push(Number(i).toBijectiveBase26()+ j);
                 }
-                results.push(columns);
+                results.push(columnsArray);
             }
             return results;
         }else if(locationrange.match(shared.regex.A1)){

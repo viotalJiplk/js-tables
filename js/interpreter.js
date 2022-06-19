@@ -24,13 +24,15 @@ for the JavaScript code in this page.
 
 //todo move to json config file
 let interpreter_regex ={
-    "string": /(?<!\\)"((\\\\)|(\\")|[^"])+"/gm,
-    "function_orExpr": /[a-zA-Z]*\([^()]*\)/,
+    "string": /(?<!\\)"((\\\\)|(\\")|[^"])*(?<!\\)"/gm,
+    "function_orExpr": /[a-zA-Z]*\([^\(\[\]\)]*\)|\[[^\(\[\]\)]*\]/, //matches expretion, function, array
     "function": /^[a-zA-Z]+\([^()]*\)$/,
     "param": /(?<=\(|\,)[^),]+/g,
     "stringplaceholder": /^%s\d+$/,
+    "arrayplaceholder": /^%a\d+$/,
     "extractnumber":/\d+/,
-    "expr": /^(\s*(((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?))\s*[\+\-\*\/]\s*)+((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?)))\s*$/ //regexp to decide if it is expr 
+    "expr": /^(\s*(((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?))\s*[\+\-\*\/]\s*)+((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?)))\s*$/, //regexp to decide if it is expr 
+    "array": /\[[^\(\[\]\)]*\]/
 }
 
 core = new CoreFunctions;
@@ -42,12 +44,14 @@ functionfeaturelist = [new CoreFunctions];
  * @param {Array} paramin 
  *
 */
-function prepareparam(paramin, Astrings){
+function prepareparam(paramin, Astrings, AAray){
     let outparam = [];
     paramin.forEach(element => {
         element = element.trim();
         if(element.match(interpreter_regex.stringplaceholder)){
-            outparam.push(Astrings[element.match(interpreter_regex.extractnumber)-1])
+            outparam.push(Astrings[element.match(interpreter_regex.extractnumber)-1]);
+        }else if(element.match(interpreter_regex.arrayplaceholder)){
+            outparam.push(AAray[element.match(interpreter_regex.extractnumber)-1]);
         }else if(!Number.isNaN(Number(element))){
             outparam.push(Number(element));
         }else if(element.match(interpreter_regex.expr)){
@@ -59,6 +63,7 @@ function prepareparam(paramin, Astrings){
 function input(string){
     //moves string out of string
     let Astrings = [];
+    let AAray = []
 
     /**
      * parses the string and calls the functions 
@@ -90,16 +95,30 @@ function input(string){
     function function_or_pl_replacer(matched_string){
         if(matched_string.match(interpreter_regex.function)){
             let function_name = matched_string.slice(0, matched_string.indexOf("(")).trim();
-            params = prepareparam(matched_string.match(interpreter_regex.param), Astrings);
-            return call_function(function_name, params);
+            params = prepareparam(matched_string.match(interpreter_regex.param), Astrings, AAray);
+            result = call_function(function_name, params)
+            if(typeof result == "object"){
+                result = "%a" + AAray.push(result);
+            }else if(typeof result == "string"){
+                result = "%s" + Astrings.push(result);
+            }
+            return result;
             
         }else if(matched_string.match(interpreter_regex.expr)){
             return solveexpr(matched_string);
+        }else if(matched_string.match(interpreter_regex.array)){
+            array = prepareparam(matched_string.slice(1, matched_string.length -1).split(","), Astrings, AAray);
+            return "%a" + AAray.push(array);
         }
     }
     string = string.replace(interpreter_regex.string, stringreplacer);
     while(string.match(interpreter_regex.function_orExpr)){
         string = string.replace(interpreter_regex.function_orExpr, function_or_pl_replacer);
+    }
+
+    let match = string.trim().match(interpreter_regex.arrayplaceholder) 
+    if(match){
+        string = AAray[match[0].match(interpreter_regex.extractnumber)-1];
     }
     return string;     
 }
