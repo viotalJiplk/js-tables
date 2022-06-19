@@ -227,7 +227,7 @@ class Sheet{
      */
     #compute(location, string, reference){
         if(string[0] == "="){
-            let calculated = function_or_pl(string.slice(1));
+            let calculated = input(string.slice(1));
             this.#setCellCacheContent(location, calculated);
             return calculated;
         }else{

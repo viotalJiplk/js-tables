@@ -23,7 +23,7 @@ for the JavaScript code in this page.
 */
 class CoreFunctions{
     //aliases
-    product(input){
+    PRODUCT(input){
         return this.multiply(input);
     }
     //end of aliases 
@@ -33,7 +33,7 @@ class CoreFunctions{
      * @param {String|Number} input
      * @returns {Number}
      */
-    toNumber(input){
+    TONUMBER(input){
         let result = new Number;
         if(typeof input == "number"){
             result = input;
@@ -42,7 +42,7 @@ class CoreFunctions{
         }
     }
 
-    getBaseLog(x, y) {
+    GETBASELOG(x, y) {
         return Math.log(y) / Math.log(x);
     }  
 
@@ -67,7 +67,7 @@ class CoreFunctions{
      * @param {Array|Number} input
      * @returns {Number} sum of input
      */
-    sum(input){
+    SUM(input){
         let result = 0;
         input = this.flatDeep(input);
         input.forEach(element => {
@@ -84,7 +84,7 @@ class CoreFunctions{
      * @param {Array|Number} input
      * @returns {Number}
      */
-    substract(input){
+    SUBSTRACT(input){
         let result = 0;
         if(typeof input[0] !== undefined){
             result = input[0];
@@ -106,7 +106,7 @@ class CoreFunctions{
      * @param {Array|Number} input
      * @returns {Number} sum of input
      */
-    multiply(input){
+    MULTIPLY(input){
         let result = 1;
         if(typeof input == "object"){
             input = this.flatDeep(input);
@@ -125,7 +125,7 @@ class CoreFunctions{
      * @param {Array|Number} input
      * @returns {Number}
      */
-    divide(input){
+    DIVIDE(input){
         let result = 0;
         if(typeof input == "object"){
             input = this.flatDeep(input);
@@ -137,6 +137,18 @@ class CoreFunctions{
                 result = Number(result) / Number(element);
             });
         }else if(typeof input == "number"){
+            result = input;
+        }
+        return result;
+    }
+    CONCAT(input){
+        let result = "";
+        if(typeof input == "object"){
+            input = this.flatDeep(input);
+            input.forEach(element => {
+                result += String(element);
+            });
+        }else if(typeof input == "string"){
             result = input;
         }
         return result;

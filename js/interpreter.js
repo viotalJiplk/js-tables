@@ -23,21 +23,87 @@ for the JavaScript code in this page.
 */
 
 //todo move to json config file
+let interpreter_regex ={
+    "string": /(?<!\\)"((\\\\)|(\\")|[^"])+"/gm,
+    "function_orExpr": /[a-zA-Z]*\([^()]*\)/,
+    "function": /^[a-zA-Z]+\([^()]*\)$/,
+    "param": /(?<=\(|\,)[^),]+/g,
+    "stringplaceholder": /^%s\d+$/,
+    "extractnumber":/\d+/,
+    "expr": /^(\s*(((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?))\s*[\+\-\*\/]\s*)+((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?)))\s*$/ //regexp to decide if it is expr 
+}
+
 core = new CoreFunctions;
 functionfeaturelist = [new CoreFunctions];
 
-const specialchars = {
-    "lock":["\""],
-    "escape":["\'"]
-}
 
 /**
- * main rendering function
- * @param {String} id 
- */
-function input(id){
-    console.log(function_or_pl(document.getElementById(id).value));
+ * 
+ * @param {Array} paramin 
+ *
+*/
+function prepareparam(paramin, Astrings){
+    let outparam = [];
+    paramin.forEach(element => {
+        element = element.trim();
+        if(element.match(interpreter_regex.stringplaceholder)){
+            outparam.push(Astrings[element.match(interpreter_regex.extractnumber)-1])
+        }else if(!Number.isNaN(Number(element))){
+            outparam.push(Number(element));
+        }else if(element.match(interpreter_regex.expr)){
+            outparam.push(Number(solveexpr(element.match(interpreter_regex.expr)[0])));
+        }
+    });
+    return outparam;
 }
+function input(string){
+    //moves string out of string
+    let Astrings = [];
+
+    /**
+     * parses the string and calls the functions 
+     * main functionality function
+     * @param {String} input string to parse
+     */
+    function call_function(function_name, param){
+        let result;
+        let sucess = 0;
+        
+        let i = 0;
+        while(i < functionfeaturelist.length & !sucess){
+            if(function_name in functionfeaturelist[i]){
+                result = functionfeaturelist[i][function_name](param);
+                sucess = 1;
+            }
+            i++;
+        }
+        if(!sucess){
+            throw new Error("Function \"" + function_name + "\" does not exist");
+        }
+        return result;
+    }
+
+    function stringreplacer(matched_string){
+        return "%s" + Astrings.push(String(matched_string.slice(1, matched_string.length -1)));
+    }
+
+    function function_or_pl_replacer(matched_string){
+        if(matched_string.match(interpreter_regex.function)){
+            let function_name = matched_string.slice(0, matched_string.indexOf("(")).trim();
+            params = prepareparam(matched_string.match(interpreter_regex.param), Astrings);
+            return call_function(function_name, params);
+            
+        }else if(matched_string.match(interpreter_regex.expr)){
+            return solveexpr(matched_string);
+        }
+    }
+    string = string.replace(interpreter_regex.string, stringreplacer);
+    while(string.match(interpreter_regex.function_orExpr)){
+        string = string.replace(interpreter_regex.function_orExpr, function_or_pl_replacer);
+    }
+    return string;     
+}
+
 
 /**
  * function to pase array from string
@@ -78,91 +144,7 @@ function parse_array(input){
     return result;
 }
 
-/**
- * 
- * @param {String} param string with parameters
- * @returns {Array} array of parameters
- */
-function parse_param(param){
-    let i = 0;
-
-    while(i < param.length){
-        if(param[i].trim().charAt(0) == "["){           //is array
-            param[i] = parse_array(param[i]);
-        }else{                //is function or expression
-            if(typeof param == "string"){
-                param = function_or_pl(param);
-            }else{
-                param[i] = function_or_pl(param[i]);
-            }
-        }
-        i++;
-    }
-    return param;
-}
-
-function input(string){
-    //moves string out of string
-    let strings = []      
-}
-
-/**
- * test if input is a function
- * @param {String} string 
- */
- function function_or_pl(string){
-    string.trim();
-    const first_without_pl = string.match(/^\s*[\+\-](\d\s*)+(\.\s*(\d\s*)+)?/);
-    if(first_without_pl != null){
-        string = string.replace(/^\s*[\+\-](\d\s*)+(\.\s*(\d\s*)+)?/ ,"(" + first_without_pl[0] + ")");
-    }
-    // /\(\s*[\+\-](\d\s*)+\s*\)/g matches first (+-numbers)
-    //solves all () and function()
-    {
-        const regex_func = /[a-zA-Z]+\(/g;
-        let func = string.match(regex_func);
-        while(func != null){
-            func = func[0];
-            let pl = 1;
-            let bgs = string.indexOf(func) + func.length;   //technicaly cannot be -1 because of while above
-            let i = bgs + 1;
-            let lock = 0;
-            while(i < string.length && !(pl == 0)){
-                if(!lock && string.charAt(i) == "("){
-                    pl++;
-                }else if(!lock && string.charAt(i) == ")" ){
-                    pl--;
-                }else if(specialchars.lock.includes(string.charAt(i))){
-                    lock++;
-                    lock=lock%2;
-                }else if(specialchars.escape.includes(string.charAt(i))){
-                    i++;
-                }
-                i++;
-            }
-            //let name_of_function = selectUntillLastNonabc(string, bgs);
-            let name_of_function = func.substring(0, func.length - 1);
-            let func_or_expr = string.slice(bgs, i - 1);
-            let result = "";
-            if(name_of_function != ""){
-                func_or_expr = name_of_function + "(" + func_or_expr + ")";
-                result = parse_function(func_or_expr);
-                if(result < 0){
-                    result = "(" + result + ")";
-                }
-                string = string.replace(func_or_expr, result);
-            }else{
-                result = parse_param(func_or_expr.slice(1, func_or_expr.length - 1));
-                //I should test if Number is returned
-                if(result < 0){
-                    result = "(" + result + ")";
-                }
-                string = string.replace(func_or_expr, result);
-            }
-            func = string.match(regex_func);
-        }
-    }
-    //now only expresion should stay
+function solveexpr(string){
     //solve all multiplications
     let regex_number = /(\d\s*)+(\.\s*(\d\s*)+)?|((?<=\()(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)(?=\)))/gm;
     {
@@ -172,7 +154,7 @@ function input(string){
             multiplic = multiplic[0];
             let result = "";
             let array = multiplic.match(regex_number);
-            result = multiply(array);
+            result = core.MULTIPLY(array);
             if(result < 0){
                 result = "(" + result + ")";
             }
@@ -188,7 +170,7 @@ function input(string){
             division = division[0];
             let result = "";
             let array = division.match(regex_number);
-            result = divide(array);
+            result = core.DIVIDE(array);
             if(result < 0){
                 result = "(" + result + ")";
             }
@@ -204,7 +186,7 @@ function input(string){
             suma = suma[0];
             let result = "";
             let array = suma.match(regex_number);
-            result = sum(array);
+            result = core.SUM(array);
             if(result < 0){
                 result = "(" + result + ")";
             }
@@ -220,7 +202,7 @@ function input(string){
             substraction = substraction[0];
             let result = "";
             let array = substraction.match(regex_number);
-            result = substract(array);
+            result = core.SUBSTRACT(array);
             if(result < 0){
                 result = "(" + result + ")";
             }
@@ -232,63 +214,4 @@ function input(string){
     string = string.replace(")", "");
     //we should check there if thing witch we are returning is number (throw error if not)
     return string;
-}
-
-/**
- * splits the string to parameters
- * @param {String} string 
- */
-function string_to_param(string){
-    let param = new Array();
-    let i = 0;
-    let lastintristingcharindex = 0;
-    let lock = 0;
-    let pl = 0;
-    let pl2 =0;
-
-    while(i < string.length){
-        if(!lock && string.charAt(i) == "["){
-            pl2++;
-        }else if(!lock && string.charAt(i) == "]" ){
-            pl2--;
-        }else if(!lock && string.charAt(i) == "("){
-            pl++;
-        }else if(!lock && string.charAt(i) == ")" ){
-            pl--;
-        }else if(pl == 0 && pl2 == 0 && specialchars.lock.includes(string.charAt(i))){
-            lock++;
-            lock=lock%2;
-        }else if(pl == 0 && pl2 == 0 && !lock){
-            if(string.charAt(i)==","){
-                param.push(string.slice(lastintristingcharindex, i));
-                lastintristingcharindex = i + 1;
-            }else if(specialchars.escape.includes(string.charAt(i))){
-                i++;
-            }
-        }
-
-        i++;
-    }
-    const last = string.slice(lastintristingcharindex)
-    if(last != ""){
-        param.push(last);
-    }
-    return param;
-}
-
-/**
- * select the last alphabetical character before position in string
- * @param {String} string string to process 
- * @param {Number} pos index of position to begin on
- * @returns {String} of alphabtical chracters before nonalphabetical
- */
-function selectUntillLastNonabc(string, pos){
-    string = string.slice(0, pos);
-    let result = string.match(/[a-zA-Z]+$/);
-    if(result != null){
-        result = result[0];
-    }else{
-        result = "";
-    }
-    return result;
 }
