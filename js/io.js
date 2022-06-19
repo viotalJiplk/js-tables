@@ -26,7 +26,8 @@ for the JavaScript code in this page.
 // implement styling
 
 class msgev{
-    constructor(type, data){
+    constructor(type, sheet=undefined, data=undefined){
+        this.sheet=sheet;
         this.type=type;
         this.data = data;
     }
@@ -48,28 +49,22 @@ class CellCache{
 }
 
 class Sheet{
-    #regex ={
-        A1: /[A-Z]+\d+/,
-        A1column: /[A-Z]+/,
-        A1row: /\d+/,
-        A1range: /[A-Z]+\d+:[A-Z]+\d+/
+    constructor(){
     }
     #data = {
         "row":{},
         "column":{},
         "table":{},
-        "cells":[]
     }
     #cache={
         "table":{},
-        "cells":[]
     }
  
     onchange(e){
         if(e.type == "contentArrayChange"){
-            render.onchange(new msgev("contentArrayChange", {"location":e.data.location, "changed": this.setCellRangeContent(e.data.location, e.data.changed)}));
+            return new msgev("contentArrayChange", e.sheet, {"location":e.data.location, "changed": this.setCellRangeContent(e.data.location, e.data.changed)});
         }else if(e.type=="contentRangeDiscovery"){
-            render.onchange(new msgev("contentArrayChange", {"location":e.data.locationrange.split(":")[0], "changed": this.getCellRangeContent(e.data.locationrange)}))
+            return new msgev("contentArrayChange", e.sheet, {"location":e.data.locationrange.split(":")[0], "changed": this.getCellRangeContent(e.data.locationrange)})
         }
     }
 
@@ -88,8 +83,8 @@ class Sheet{
      */
     setCellRangeContent(location, new_content){
         let result = [];
-        let column = Number().fromBijectiveBase26(location.match(this.#regex.A1column));
-        let row = Number(location.match(this.#regex.A1row));
+        let column = Number().fromBijectiveBase26(location.match(shared.regex.A1column));
+        let row = Number(location.match(shared.regex.A1row));
         let i=0;
         while(i<new_content.length){
             let columns = [];
@@ -105,7 +100,7 @@ class Sheet{
         
     }
 
-    save(){
+    savedata(){
         return this.#data;
     }
 
@@ -139,10 +134,10 @@ class Sheet{
      */
     #getCellContent(location, calc=0, reference=undefined){
         if(this.#data.table[location] === undefined){
-            //the data has not yet been set in reference table
+            //the data has not yet been set
             return null;
         }else{
-            let rawdata = this.#data.cells[this.#data.table[location].index].content;
+            let rawdata = this.#data.table[location].content;
             if(calc == 0){
                 return rawdata;
             }else if(calc == 1){
@@ -160,12 +155,10 @@ class Sheet{
      */
     #setCellContent(location, new_content){
         if(this.#data.table[location] !== undefined){
-            this.#data.cells[this.#data.table[location].index].content=new_content;
+            this.#data.table[location].content=new_content;
         }else{
             let cell = new Cell(new_content);
-            this.#data.table[location] = {
-                "index": this.#data.cells.push(cell) - 1
-            };
+            this.#data.table[location] = cell;
         }
         return this.#compute(location, new_content, undefined);
     }
@@ -192,12 +185,10 @@ class Sheet{
      */
     #setCellCacheContent(location, computedcontent){
         if(this.#cache.table[location] !== undefined){
-            this.#cache.cells[this.#cache.table[location].index].computedcontent=computedcontent;
+            this.#cache.table[location].computedcontent=computedcontent;
         }else{
             let cell = new CellCache(computedcontent);
-            this.#cache.table[location] = {
-                "index": this.#cache.cells.push(cell) - 1
-            };
+            this.#cache.table[location] = cell;
         }
     }
 
@@ -210,13 +201,13 @@ class Sheet{
      */
     #getCellCacheContent(location, reference, recalc=true){
         if(this.#cache.table[location] !== undefined){
-            return this.#cache.cells[this.#data.table[location].index].computedcontent;
+            return this.#data.table[location].computedcontent;
         }else{
             if(recalc){
                 // have to calculate them
                 // get raw cell data
                 if(this.#data.table[location] !== undefined){
-                    rawdata=this.#data.cells[this.#data.table[location].index].computedcontent;
+                    rawdata=this.#data.cells.computedcontent;
                     return this.#compute(location, rawdata, reference);
                 }else{
                     return null;
@@ -251,11 +242,11 @@ class Sheet{
      */
     #agregateListFromA1(locationrange){
         locationrange =  locationrange.trim();
-        if(locationrange.match(this.#regex.A1range)){
+        if(locationrange.match(shared.regex.A1range)){
             let results = [];
             let points = locationrange.split(":");
-            let columns = [Number().fromBijectiveBase26(points[0].match(this.#regex.A1column)), Number().fromBijectiveBase26(points[1].match(this.#regex.A1column))];
-            let rows = [Number(points[0].match(this.#regex.A1row)), Number(points[1].match(this.#regex.A1row))];
+            let columns = [Number().fromBijectiveBase26(points[0].match(shared.regex.A1column)), Number().fromBijectiveBase26(points[1].match(shared.regex.A1column))];
+            let rows = [Number(points[0].match(shared.regex.A1row)), Number(points[1].match(shared.regex.A1row))];
             if(rows[0] > rows[1]){
                 let helper = row[0];
                 row[0]=row[1];
@@ -274,11 +265,35 @@ class Sheet{
                 results.push(columns);
             }
             return results;
-        }else if(locationrange.match(this.#regex.A1)){
+        }else if(locationrange.match(shared.regex.A1)){
             return [[locationrange]];
         }else{
             throw new Error("Not a A1 notation");
         }
     }
 };
-const sheet1 = new Sheet();
+
+class dataLayer{
+    constructor(){
+    }
+    sheets = {};
+    createSheet(id){
+        return this.sheets[id]=(new Sheet);
+    }
+    deleteSheet(id){
+        delete this.sheets[id];
+    }
+    onchange(e){
+        if(e.type=="createSheet"){
+            this.createSheet(e.sheet);
+        }else if(e.type=="deleteSheet"){
+            this.deleteSheet(e.sheet);
+            render.onchange(e);
+        }else{
+            let to_return = this.sheets[e.sheet].onchange(e);
+            render.onchange(to_return);
+        }
+    }
+    
+}
+const dataObject = new dataLayer()

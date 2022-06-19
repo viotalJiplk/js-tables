@@ -42,6 +42,10 @@ class CoreFunctions{
         }
     }
 
+    getBaseLog(x, y) {
+        return Math.log(y) / Math.log(x);
+    }  
+
     /**
     * just testing function
     * @param {Array} arrayin array of input 

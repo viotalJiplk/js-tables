@@ -22,145 +22,160 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 for the JavaScript code in this page.
 */
 
-const render = {
-    regex:{
-        A1: /[A-Z]+\d+/,
-        A1column: /[A-Z]+/,
-        A1row: /\d+/,
-        A1range: /[A-Z]+\d+:[A-Z]+\d+/
+class Sheetelem extends HTMLElement{
+    constructor(){
+        super();
+        this.attachShadow({mode: 'open'});
+        let sheetid = this.getAttribute("data-sheet-id");
+        this.setAttribute("id", "sheet_"+sheetid);
+        dataObject.onchange(new msgev("createSheet",sheetid));
+
+        this.root_element = this;
+        let link = document.createElement("link");
+        link.setAttribute("rel","stylesheet");
+        link.setAttribute("href", "css/index.css");
+        this.shadowRoot.append(this.generateSpreadsheet(50,50, sheetid), link);
+        //this.addEventListener("click", this.testtosubmit);
     }
-}
-render.onchange = function(e){
-    if(e.type == "contentArrayChange"){
-        console.log(e.data);
-        let column = Number().fromBijectiveBase26(e.data.location.match(this.regex.A1column));
-        let row = Number(e.data.location.match(this.regex.A1row));
-        let i = 0;
-        while(i<e.data.changed.length){
-            let j=0;
-            while(j<e.data.changed[i].length){
-                    document.getElementById(Number(column+i).toBijectiveBase26()+String(row +j)).firstElementChild.value = e.data.changed[i][j];
-                j++;
+
+    onchange = function(e){
+        if(e.type == "contentArrayChange"){
+            let column = Number().fromBijectiveBase26(e.data.location.match(shared.regex.A1column));
+            let row = Number(e.data.location.match(shared.regex.A1row));
+            let i = 0;
+            while(i<e.data.changed.length){
+                let j=0;
+                while(j<e.data.changed[i].length){
+                        this.shadowRoot.getElementById(Number(column+i).toBijectiveBase26()+String(row +j)).firstElementChild.value = e.data.changed[i][j];
+                    j++;
+                }
+                i++;
             }
-            i++;
         }
+    }
+
+    /**
+     * tests if you clicked out of input tag and if you had processes the change
+     * @param {Event} event 
+     */
+    eventHandeler(event){
+        function getroot(elem){
+            while(elem.parentElement != null){
+                elem = elem.parentElement
+            }
+            return elem;
+        }
+        /**
+         * function to interface with io js to compute the output
+         * @param {Array} cellcontent cell content
+         */
+        async function submit(cellcontent, sheetid, location){
+            dataObject.onchange(new msgev("contentArrayChange",  sheetid,{"location":location, "changed": cellcontent}));
+        }
+
+        let root = getroot(event.target);
+        let sheetid = root.getAttribute("data-sheet-id")
+        let active = Array.from(root.getElementsByClassName("active"))[0];
+        if(active !== undefined){
+            if(event.target !== active){
+                if(active.nodeName =="INPUT"){
+                    submit([[active.value]], sheetid, active.parentElement.id);
+                }
+                if(event.target.nodeName == "INPUT"){
+                    dataObject.onchange(new msgev("contentRangeDiscovery", sheetid, {"locationrange":event.target.parentElement.id}));
+                }
+            }
+            active.className ="";
+        }
+        event.target.className = "active"; 
+    }
+    /**
+     * Generates an empty spreadsheet element
+     * @param {Number} width Spreadsheet width...
+     * @param {Number} height Spreadsheet hight...
+     * @returns {HTMLDivElement} Pregenerated spreadsheet of defined size
+     */
+     generateSpreadsheet(width, height, sheetid) {
+
+        var spreadsheet = document.createElement("div");
+        spreadsheet.className = "spreadsheet";
+        spreadsheet.setAttribute("data-sheet-id", sheetid)
+        spreadsheet.id = "spreadsheet";
+
+        for (var row_number = 0; row_number <= height; row_number++) {
+            let column_number = 0;
+
+            var th = document.createElement('div');
+            th.className = "spreadsheet-header";
+            th.id = "th"+row_number;
+
+            if (row_number > 0) {
+                th.innerHTML = row_number;
+            }else{
+                th.innerHTML = "*";
+                th.style.zIndex = "9999";
+            }
+
+            th.style.gridColumnStart=column_number+1;
+            th.style.gridRowStart=row_number+1;
+            spreadsheet.appendChild(th);
+
+            for (let column_number = 1; column_number <= width; column_number++) {
+                let column = Number(column_number).toBijectiveBase26()
+                if (row_number == 0) {
+                    let th = document.createElement('div');
+                    th.innerHTML = column;
+                    th.className = "spreadsheet-header";
+                    th.id = "th"+column;
+
+                    th.style.gridColumnStart=column_number+1;
+                    th.style.gridRowStart=row_number+1;
+                    spreadsheet.appendChild(th);
+                }else{
+                    let input = document.createElement('input');
+                    input.addEventListener("click", this.eventHandeler);
+                    
+                    let cell = document.createElement('div');
+                    cell.className = "spreadsheet-cell " +column + " "+ row_number;
+                    cell.id = column+row_number;
+                    cell.appendChild(input);
+                    // cell.innerHTML = "-"; //For testing
+
+                    cell.style.gridColumnStart=column_number+1;
+                    cell.style.gridRowStart=row_number+1;
+                    spreadsheet.appendChild(cell);
+                }
+            }
+        }
+        return spreadsheet;
+    }
+
+    /**
+     * Appends empty spreadsheet to 
+     * @param {Element} element The element you wat to append the spreadsheet to
+     * @param {Number} width Spreadsheet width...
+     * @param {Number} height Spreadsheet hight...
+     * @returns {*} Appends pregenerated spreadsheet of defined size to selected element.
+     */
+    appendSpreadsheet(width,height){
+        // attempt to clean input type?
+        // element = Element(element);
+        this.root_element.appendChild(this.generateSpreadsheet(width,height));
     }
 }
 
-
-// superglobals
-let active = document.createElement("p");
-
-/**
- * function to interface with io js to compute the output
- * @param {Array} cellcontent cell content
- */
-async function submit(cellcontent, location){
-    sheet1.onchange(new msgev("contentArrayChange", {"location":location, "changed": cellcontent}));
+const render = {};
+render.onchange = function(e){
+    document.getElementById("sheet_"+e.sheet).onchange(e);;    
 }
-/**
- * tests if you clicked out of input tag and if you had processes the change
- * @param {Event} event 
- */
-function testtosubmit(event){
-    if(event.target !== active){
-        if(active.nodeName =="INPUT"){
-            submit([[active.value]], active.parentElement.id);
-        }
-        if(event.target.nodeName == "INPUT"){
-            sheet1.onchange(new msgev("contentRangeDiscovery", {"locationrange":event.target.parentElement.id}));
-        }
-        active = event.target;
-    }
-}
-
 
 document.addEventListener("click", function(e){
-    testtosubmit(e);
-})
+    console.log(e);
+    //SheetArray[0].testtosubmit(e);
+});
 
-function getBaseLog(x, y) {
-    return Math.log(y) / Math.log(x);
-}  
+customElements.define('sheet-custom', Sheetelem);
 
-
- /**
- * Generates an empty spreadsheet element
- * @param {Number} width Spreadsheet width...
- * @param {Number} height Spreadsheet hight...
- * @returns {HTMLDivElement} Pregenerated spreadsheet of defined size
- */
-function generateSpreadsheet(width, height) {
-    // TODO var en_alphabeth = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
-
-    var spreadsheet = document.createElement("div");
-    spreadsheet.className = "spreadsheet";
-    spreadsheet.id = "spreadsheet";
-
-    for (var row_number = 0; row_number <= height; row_number++) {
-        column_number = 0;
-
-        var th = document.createElement('div');
-        th.className = "spreadsheet-header";
-        th.id = "th"+row_number;
-
-        if (row_number > 0) {
-            th.innerHTML = row_number;
-        }else{
-            th.innerHTML = "*";
-            th.style.zIndex = "9999";
-        }
-
-        th.style.gridColumnStart=column_number+1;
-        th.style.gridRowStart=row_number+1;
-        spreadsheet.appendChild(th);
-
-        for (let column_number = 1; column_number <= width; column_number++) {
-            let column = Number(column_number).toBijectiveBase26()
-            if (row_number == 0) {
-                let th = document.createElement('div');
-                th.innerHTML = column;
-                th.className = "spreadsheet-header";
-                th.id = "th"+column;
-
-                th.style.gridColumnStart=column_number+1;
-                th.style.gridRowStart=row_number+1;
-                spreadsheet.appendChild(th);
-            }else{
-                let input = document.createElement('input'); 
-                input.addEventListener("click", function(e) {
-                    testtosubmit(e);
-                });
-                
-                let cell = document.createElement('div');
-                cell.className = "spreadsheet-cell " +column + " "+ row_number;
-                cell.id = column+row_number;
-                cell.appendChild(input);
-                // cell.innerHTML = "-"; //For testing
-
-                cell.style.gridColumnStart=column_number+1;
-                cell.style.gridRowStart=row_number+1;
-                spreadsheet.appendChild(cell);
-            }
-        }
-    }
-    return spreadsheet;
-}
-
-/**
- * Appends empty spreadsheet to 
- * @param {Element} element The element you wat to append the spreadsheet to
- * @param {Number} width Spreadsheet width...
- * @param {Number} height Spreadsheet hight...
- * @returns {*} Appends pregenerated spreadsheet of defined size to selected element.
- */
-function appendSpreadsheet(element,width,height){
-    // attempt to clean input type?
-    // element = Element(element);
-    element.appendChild(generateSpreadsheet(width,height));
-}
-
-appendSpreadsheet(document.getElementById("spreadsheet-wrapper"),50,50);
 /*
 console.log(document.getElementsByName(body));
 */

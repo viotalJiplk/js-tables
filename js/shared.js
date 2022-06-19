@@ -1,3 +1,12 @@
+const shared = {
+  "regex":{
+    "A1": /[A-Z]+\d+/,
+    "A1column": /[A-Z]+/,
+    "A1row": /\d+/,
+    "A1range": /[A-Z]+\d+:[A-Z]+\d+/
+  }
+}
+
 // inspiration https://github.com/ptrkcsk/BB26/blob/main/source/to-decimal.ts
 Number.prototype.fromBijectiveBase26 = (function(string){
 	if (!/[A-Z]/.test(string)) {
