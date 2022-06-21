@@ -49,8 +49,9 @@ class CellCache{
 }
 
 class Sheet{
-    constructor(sheetid){
-        this.sheetid = sheetid;
+    constructor(sheetId, sheetName){
+        this.sheetId = sheetId;
+        this.sheetName = sheetName;
     }
     #data = {
         "row":{},
@@ -60,6 +61,7 @@ class Sheet{
     #cache={
         "table":{},
     }
+    sheetName = ""
  
     onchange(e){
         if(e.type == "contentArrayChange"){
@@ -259,7 +261,7 @@ class Sheet{
      */
     #compute(string){
         if(string[0] == "="){
-            let calculated = input(string.slice(1), this.sheetid);
+            let calculated = mainInterpreter.input(string.slice(1), this.sheetid);
             return calculated;
         }else{
             return string;
@@ -332,11 +334,11 @@ class dataLayer{
         return sheet_id;
     }
     
-    getSheetByName(name){
-        return this.sheets[this.translatetoSheetId(name)];
+    #getSheetByName(name){
+        return this.sheets[this.#translatetoSheetId(name)];
     }
 
-    translatetoSheetId(name){
+    #translatetoSheetId(name){
         if(this.sheetspointers[name] === undefined){
             throw new Error("Spreadsheet does not exists")
         }else{
@@ -344,37 +346,38 @@ class dataLayer{
         }
     }
 
-    createSheet(name){
+    #createSheet(name){
         if(this.sheetspointers[name] !== undefined){
             throw new Error("Name of spreadsheet already used")
         }else{
             let sheet_id = this.#generateSheetId();
-            this.sheets[sheet_id] = new Sheet(sheet_id);
+            this.sheets[sheet_id] = new Sheet(sheet_id, name);
             this.sheetspointers[name] = {
                 "sheetId": sheet_id
             }
         }
     }
 
-    renameSheet(old_name, new_name){
+    #renameSheet(old_name, new_name){
         if(this.sheetspointers[new_name] !== undefined){
             throw new Error("Name of spreadsheet already used");
         }else if(this.sheetspointers[old_name] === undefined){
             throw new Error("Old Spreadsheet does not exist");
         }else{
-            let sheet_id = this.translatetoSheetId(old_name);
+            let sheet_id = this.#translatetoSheetId(old_name);
             delete this.sheetspointers[old_name];
             this.sheetspointers[new_name] = {
                 "sheetId": sheet_id
             }
+            this.sheets[sheet_id].sheetName = new_name;
         }
     }
 
-    deleteSheet(name){
+    #deleteSheet(name){
         if(this.sheetspointers[name] === undefined){
             throw new Error("Spreadsheet does not exist");
         }else{
-            let sheet_id = this.translatetoSheetId(name);
+            let sheet_id = this.#translatetoSheetId(name);
             delete this.sheetspointers[name];
             delete this.sheets[sheet_id];
         }
@@ -384,16 +387,16 @@ class dataLayer{
         console.log("io received msg:");
         console.log(e);
         if(e.type=="createSheet"){
-            this.createSheet(e.sheet);
+            this.#createSheet(e.sheet);
             render.onchange(e);
         }else if(e.type=="deleteSheet"){
-            this.deleteSheet(e.sheet);
+            this.#deleteSheet(e.sheet);
             render.onchange(e);
         }else if(e.type=="renameSheet"){
-            this.renameSheet(e.sheet, e.data.new_name);
+            this.#renameSheet(e.sheet, e.data.new_name);
             render.onchange(e);
         }else{
-            let to_return = this.getSheetByName(e.sheet).onchange(e);
+            let to_return = this.#getSheetByName(e.sheet).onchange(e);
             render.onchange(to_return);
         }
     }
