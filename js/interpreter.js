@@ -31,8 +31,15 @@ class Interpreter {
         "stringplaceholder": /^%s\d+$/,
         "arrayplaceholder": /^%a\d+$/,
         "extractnumber":/\d+/,
-        "expr": /^(\s*(((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?))\s*[\+\-\*\/]\s*)+((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?)))\s*$/, //regexp to decide if it is expr 
-        "array": /\[[^\(\[\]\)]*\]/
+        "expr": /^\(?(\s*(((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?))\s*[\+\-\*\/]\s*)+((\(\s*([\+\-](\d+)+(\.(\d+)+)?)\))|((\d+)+(\.(\d+)+)?)))\)?\s*$/, //regexp to decide if it is expr 
+        "array": /\[[^\(\[\]\)]*\]/,
+        "solveexpr":{
+            "exprnumber": /(\d\s*)+(\.\s*(\d\s*)+)?|((?<=\()(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)(?=\)))/gm,
+            "exprmultiply" : /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\*]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m,
+            "exprdivision": /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\/]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m,
+            "exprsum": /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\+]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m,
+            "exprsubstract": /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\-]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m
+        }
     }
 
     #core = new CoreFunctions;
@@ -52,68 +59,63 @@ class Interpreter {
 
         function solveexpr(string){
             //solve all multiplications
-            let regex_number = /(\d\s*)+(\.\s*(\d\s*)+)?|((?<=\()(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)(?=\)))/gm;
             {
-                const regex_multiply = /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\*]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m;
-                let multiplic = string.match(regex_multiply);
+                let multiplic = string.match(classontext.#interpreter_regex.solveexpr.exprmultiply);
                 while(multiplic !== null){
                     multiplic = multiplic[0];
                     let result = "";
-                    let array = multiplic.match(regex_number);
-                    result = this.#core.MULTIPLY(array);
+                    let array = multiplic.match(classontext.#interpreter_regex.solveexpr.exprnumber);
+                    result = classontext.#core.MULTIPLY(array);
                     if(result < 0){
                         result = "(" + result + ")";
                     }
                     string = string.replace(multiplic, result);
-                    multiplic = string.match(regex_multiply);
+                    multiplic = string.match(classontext.#interpreter_regex.solveexpr.exprmultiply);
                 }
             }
             //solve all divisions
             {
-                const regex_division = /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\/]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m;
-                let division = string.match(regex_division);
+                let division = string.match(classontext.#interpreter_regex.solveexpr.exprdivision);
                 while(division !== null){
                     division = division[0];
                     let result = "";
-                    let array = division.match(regex_number);
+                    let array = division.match(classontext.#interpreter_regex.solveexpr.exprnumber);
                     result = classontext.#core.DIVIDE(array);
                     if(result < 0){
                         result = "(" + result + ")";
                     }
                     string = string.replace(division, result);
-                    division = string.match(regex_division);
+                    division = string.match(classontext.#interpreter_regex.solveexpr.exprdivision);
                 }
             }
             //solve all sums
             {
-                const regex_sum = /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\+]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m;
-                let suma = string.match(regex_sum);
+                let suma = string.match(classontext.#interpreter_regex.solveexpr.exprsum);
                 while(suma !== null){
                     suma = suma[0];
                     let result = "";
-                    let array = suma.match(regex_number);
+                    let array = suma.match(classontext.#interpreter_regex.solveexpr.exprnumber);
                     result = classontext.#core.SUM(array);
                     if(result < 0){
                         result = "(" + result + ")";
                     }
                     string = string.replace(suma, result);
-                    suma = string.match(regex_sum);
+                    suma = string.match(classontext.#interpreter_regex.solveexpr.exprsum);
                 }
             }
             //solve all subtractions
             {
-                const regex_substract = /\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))\s*[\-]\s*((\d\s*)+(\.\s*(\d\s*)+)?|(\(\s*[\+\-]\s*(\d\s*)+(\.\s*(\d\s*)+)?)\))/m;
-                let substraction = string.match(regex_substract);
+                let substraction = string.match(classontext.#interpreter_regex.solveexpr.exprsubstract);
                 while(substraction !== null){
                     substraction = substraction[0];
                     let result = "";
-                    let array = substraction.match(regex_number);
+                    let array = substraction.match(classontext.#interpreter_regex.solveexpr.exprnumber);
                     result = classontext.#core.SUBSTRACT(array);
                     if(result < 0){
                         result = "(" + result + ")";
                     }
                     string = string.replace(substraction, result);
-                    substraction = string.match(regex_substract);
+                    substraction = string.match(classontext.#interpreter_regex.solveexpr.exprsubstract);
                 }
             }
             string = string.replace("(", "");
@@ -197,6 +199,9 @@ class Interpreter {
         string = string.replace(this.#interpreter_regex.string, stringreplacer);
         while(string.match(this.#interpreter_regex.function_orExpr)){
             string = string.replace(this.#interpreter_regex.function_orExpr, function_or_pl_replacer);
+        }
+        if(string.match(this.#interpreter_regex.expr)){
+            string = solveexpr(string);
         }
 
 
