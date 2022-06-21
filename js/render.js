@@ -165,6 +165,8 @@ class Sheetelem extends HTMLElement{
 
 const render = {};
 render.onchange = function(e){
+    console.log("render received msg:");
+    console.log(e);
     document.getElementById("sheet_"+e.sheet).onchange(e);;    
 }
 

@@ -49,7 +49,8 @@ class CellCache{
 }
 
 class Sheet{
-    constructor(){
+    constructor(sheetid){
+        this.sheetid = sheetid;
     }
     #data = {
         "row":{},
@@ -94,12 +95,12 @@ class Sheet{
             while(j<new_content[0].length){
                 this.#setCellContent(Number(column+i).toBijectiveBase26() + String(row+j), new_content[i][j]);
                 let computed = this.#compute(new_content[i][j]);
-                if(typeof computed == "object"){
+                if(Array.isArray(computed)){
                     if(computed.length + column > max_index[0]){
                         max_index[0] = computed.length + column;
                     }
                     for (let k = 0; k < computed.length; k++) {
-                        if(typeof computed == "object"){
+                        if(Array.isArray(computed[k])){
                             if(computed[k].length + row > max_index[1]){
                                 max_index[1] = computed.length + row;
                             }
@@ -258,7 +259,7 @@ class Sheet{
      */
     #compute(string){
         if(string[0] == "="){
-            let calculated = input(string.slice(1));
+            let calculated = input(string.slice(1), this.sheetid);
             return calculated;
         }else{
             return string;
@@ -275,8 +276,8 @@ class Sheet{
         if(locationrange.match(shared.regex.A1range)){
             let results = [];
             let points = locationrange.split(":");
-            let columns = [Number().fromBijectiveBase26(points[0].match(shared.regex.A1column)), Number().fromBijectiveBase26(points[1].match(shared.regex.A1column))];
-            let rows = [Number(points[0].match(shared.regex.A1row)), Number(points[1].match(shared.regex.A1row))];
+            let columns = [Number().fromBijectiveBase26(points[0].match(shared.regex.A1column)[0]), Number().fromBijectiveBase26(points[1].match(shared.regex.A1column)[0])];
+            let rows = [Number(points[0].match(shared.regex.A1row)[0]), Number(points[1].match(shared.regex.A1row)[0])];
             if(rows[0] > rows[1]){
                 let helper = rows[0];
                 rows[0]=rows[1];
@@ -306,21 +307,93 @@ class Sheet{
 class dataLayer{
     constructor(){
     }
-    sheets = {};
-    createSheet(id){
-        return this.sheets[id]=(new Sheet);
+
+    sheetspointers ={
+
     }
-    deleteSheet(id){
-        delete this.sheets[id];
+    sheets = {
+
+    };
+    #generateSheetId(){
+        let sheet_id = ""
+        for(let i = 0; i<4; i++){
+            let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
+            if(number >= 10){
+                number -= 10;
+                if(number > shared.alphabet.length){
+                    sheet_id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
+                }else{
+                    sheet_id += shared.alphabet[number];
+                }
+            }else{
+                sheet_id += String(number);
+            }
+        }
+        return sheet_id;
     }
+    
+    getSheetByName(name){
+        return this.sheets[this.translatetoSheetId(name)];
+    }
+
+    translatetoSheetId(name){
+        if(this.sheetspointers[name] === undefined){
+            throw new Error("Spreadsheet does not exists")
+        }else{
+            return this.sheetspointers[name].sheetId;
+        }
+    }
+
+    createSheet(name){
+        if(this.sheetspointers[name] !== undefined){
+            throw new Error("Name of spreadsheet already used")
+        }else{
+            let sheet_id = this.#generateSheetId();
+            this.sheets[sheet_id] = new Sheet(sheet_id);
+            this.sheetspointers[name] = {
+                "sheetId": sheet_id
+            }
+        }
+    }
+
+    renameSheet(old_name, new_name){
+        if(this.sheetspointers[new_name] !== undefined){
+            throw new Error("Name of spreadsheet already used");
+        }else if(this.sheetspointers[old_name] === undefined){
+            throw new Error("Old Spreadsheet does not exist");
+        }else{
+            let sheet_id = this.translatetoSheetId(old_name);
+            delete this.sheetspointers[old_name];
+            this.sheetspointers[new_name] = {
+                "sheetId": sheet_id
+            }
+        }
+    }
+
+    deleteSheet(name){
+        if(this.sheetspointers[name] === undefined){
+            throw new Error("Spreadsheet does not exist");
+        }else{
+            let sheet_id = this.translatetoSheetId(name);
+            delete this.sheetspointers[name];
+            delete this.sheets[sheet_id];
+        }
+    }
+
     onchange(e){
+        console.log("io received msg:");
+        console.log(e);
         if(e.type=="createSheet"){
             this.createSheet(e.sheet);
+            render.onchange(e);
         }else if(e.type=="deleteSheet"){
             this.deleteSheet(e.sheet);
             render.onchange(e);
+        }else if(e.type=="renameSheet"){
+            this.renameSheet(e.sheet, e.data.new_name);
+            render.onchange(e);
         }else{
-            let to_return = this.sheets[e.sheet].onchange(e);
+            let to_return = this.getSheetByName(e.sheet).onchange(e);
             render.onchange(to_return);
         }
     }

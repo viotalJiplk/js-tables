@@ -49,9 +49,9 @@ function prepareparam(paramin, Astrings, AAray){
     paramin.forEach(element => {
         element = element.trim();
         if(element.match(interpreter_regex.stringplaceholder)){
-            outparam.push(Astrings[element.match(interpreter_regex.extractnumber)-1]);
+            outparam.push(Astrings[element.match(interpreter_regex.extractnumber)]);
         }else if(element.match(interpreter_regex.arrayplaceholder)){
-            outparam.push(AAray[element.match(interpreter_regex.extractnumber)-1]);
+            outparam.push(AAray[element.match(interpreter_regex.extractnumber)]);
         }else if(!Number.isNaN(Number(element))){
             outparam.push(Number(element));
         }else if(element.match(interpreter_regex.expr)){
@@ -60,7 +60,7 @@ function prepareparam(paramin, Astrings, AAray){
     });
     return outparam;
 }
-function input(string){
+function input(string, sheet_id){
     //moves string out of string
     let Astrings = [];
     let AAray = []
@@ -89,7 +89,15 @@ function input(string){
     }
 
     function stringreplacer(matched_string){
-        return "%s" + Astrings.push(String(matched_string.slice(1, matched_string.length -1)));
+        return "%s" + (Astrings.push(String(matched_string.slice(1, matched_string.length -1)))- 1);
+    }
+    function stringreturner(matched_string){
+        let index = matched_string.match(interpreter_regex.extractnumber)[0];
+        return Astrings[index];
+    }
+    function arraayreturner(matched_string){
+        let index = matched_string.match(interpreter_regex.extractnumber)[0];
+        return JSON.stringify(AAray[index]);
     }
 
     function function_or_pl_replacer(matched_string){
@@ -98,9 +106,9 @@ function input(string){
             params = prepareparam(matched_string.match(interpreter_regex.param), Astrings, AAray);
             result = call_function(function_name, params)
             if(typeof result == "object"){
-                result = "%a" + AAray.push(result);
+                result = "%a" + (AAray.push(result) - 1);
             }else if(typeof result == "string"){
-                result = "%s" + Astrings.push(result);
+                result = "%s" + (Astrings.push(result) - 1);
             }
             return result;
             
@@ -108,7 +116,7 @@ function input(string){
             return solveexpr(matched_string);
         }else if(matched_string.match(interpreter_regex.array)){
             array = prepareparam(matched_string.slice(1, matched_string.length -1).split(","), Astrings, AAray);
-            return "%a" + AAray.push(array);
+            return "%a" + (AAray.push(array)-1);
         }
     }
     string = string.replace(interpreter_regex.string, stringreplacer);
@@ -116,10 +124,16 @@ function input(string){
         string = string.replace(interpreter_regex.function_orExpr, function_or_pl_replacer);
     }
 
-    let match = string.trim().match(interpreter_regex.arrayplaceholder) 
+
+    //replace placeholders with values
+    let match = string.trim().match(interpreter_regex.arrayplaceholder); //if return = "%a1"
     if(match){
-        string = AAray[match[0].match(interpreter_regex.extractnumber)-1];
+        string = AAray[match[0].match(interpreter_regex.extractnumber)[0]];
+    }else{
+        string = string.replace(interpreter_regex.arrayplaceholder, arraayreturner)
+        string = string.replace(interpreter_regex.stringplaceholder, stringreturner);
     }
+    
     return string;     
 }
 

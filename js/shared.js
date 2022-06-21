@@ -4,8 +4,14 @@ const shared = {
     "A1column": /[A-Z]+/,
     "A1row": /\d+/,
     "A1range": /[A-Z]+\d+:[A-Z]+\d+/
-  }
+  },
+  "alphabet": []
 }
+
+for(let i =  "a".charCodeAt(0); i< "z".charCodeAt(0)+1; i++){
+  shared.alphabet.push(String.fromCharCode(i));
+}
+
 
 // inspiration https://github.com/ptrkcsk/BB26/blob/main/source/to-decimal.ts
 Number.prototype.fromBijectiveBase26 = (function(string){
