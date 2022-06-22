@@ -45,11 +45,23 @@ class Sheetelem extends HTMLElement{
             while(i<e.data.changed.length){
                 let j=0;
                 while(j<e.data.changed[i].length){
-                        this.shadowRoot.getElementById(Number(column+i).toBijectiveBase26()+String(row +j)).firstElementChild.value = e.data.changed[i][j];
-                    j++;
+                        try{
+                            this.shadowRoot.getElementById(Number(column+i).toBijectiveBase26()+String(row +j)).firstElementChild.value = e.data.changed[i][j];
+                        }catch(e){
+                            throw new Error("The cell " + Number(column+i).toBijectiveBase26()+String(row +j) + " does not exist. Is the table big enought?");
+                        }
+                        j++;
                 }
                 i++;
             }
+        }else if(e.type=="createSheet"){
+
+        }else if(e.type=="deleteSheet"){
+            
+        }else if(e.type=="renameSheet"){
+            
+        }else if(e.type = "Error"){
+            alert(e.data.errormsg);
         }
     }
 

@@ -386,18 +386,22 @@ class dataLayer{
     onchange(e){
         console.log("io received msg:");
         console.log(e);
-        if(e.type=="createSheet"){
-            this.#createSheet(e.sheet);
-            render.onchange(e);
-        }else if(e.type=="deleteSheet"){
-            this.#deleteSheet(e.sheet);
-            render.onchange(e);
-        }else if(e.type=="renameSheet"){
-            this.#renameSheet(e.sheet, e.data.new_name);
-            render.onchange(e);
-        }else{
-            let to_return = this.#getSheetByName(e.sheet).onchange(e);
-            render.onchange(to_return);
+        try{
+            if(e.type=="createSheet"){
+                this.#createSheet(e.sheet);
+                render.onchange(e);
+            }else if(e.type=="deleteSheet"){
+                this.#deleteSheet(e.sheet);
+                render.onchange(e);
+            }else if(e.type=="renameSheet"){
+                this.#renameSheet(e.sheet, e.data.new_name);
+                render.onchange(e);
+            }else{
+                let to_return = this.#getSheetByName(e.sheet).onchange(e);
+                render.onchange(to_return);
+            }
+        }catch(error){
+            render.onchange(new msgev("Error", e.sheet, {"req:": e, "errmsg":error.msg}));
         }
     }
     
