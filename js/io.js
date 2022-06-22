@@ -99,12 +99,12 @@ class Sheet{
                 let computed = this.#compute(new_content[i][j]);
                 if(Array.isArray(computed)){
                     if(computed.length + column > max_index[0]){
-                        max_index[0] = computed.length + column;
+                        max_index[0] = (computed.length-1) + column;
                     }
                     for (let k = 0; k < computed.length; k++) {
                         if(Array.isArray(computed[k])){
                             if(computed[k].length + row > max_index[1]){
-                                max_index[1] = computed.length + row;
+                                max_index[1] = (computed.length-1) + row;
                             }
                             for(let l = 0; l < computed.length; l++) {
                                 if(!(l == 0 & k == 0)){
@@ -126,7 +126,7 @@ class Sheet{
             }
             i++;
         }
-        return this.getCellRangeContent(Number(max_index[0]).toBijectiveBase26() + max_index[1] + ":" + Number(column).toBijectiveBase26() + row , 1);
+        return this.getCellRangeContent(Number(column).toBijectiveBase26() + row  + ":"+ Number(max_index[0]).toBijectiveBase26() + max_index[1], 1);
         
     }
 
