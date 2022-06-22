@@ -48,8 +48,35 @@ class CellCache{
     }
 }
 
-class Sheet{
+class Utils{
+    generateId(length){
+        let id = ""
+        {
+            let i = 0;
+            do{
+                for(let i = 0; i<length; i++){
+                    let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
+                    if(number >= 10){
+                        number -= 10;
+                        if(number > shared.alphabet.length){
+                            id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
+                        }else{
+                            id += shared.alphabet[number];
+                        }
+                    }else{
+                        id += String(number);
+                    }
+                }
+                i++;
+            }while((this.sheets[id] !== undefined) & i < 10);
+        }
+        return id;
+    }
+}
+
+class Sheet extends Utils{
     constructor(sheetId, sheetName){
+        super();
         this.sheetId = sheetId;
         this.sheetName = sheetName;
     }
@@ -306,8 +333,9 @@ class Sheet{
     }
 };
 
-class dataLayer{
+class dataLayer extends Utils{
     constructor(){
+        super();
     }
 
     sheetspointers ={
@@ -318,25 +346,7 @@ class dataLayer{
     };
     #generateSheetId(){
         let sheet_id = ""
-        {
-            let i = 0;
-            do{
-                for(let i = 0; i<4; i++){
-                    let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
-                    if(number >= 10){
-                        number -= 10;
-                        if(number > shared.alphabet.length){
-                            sheet_id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
-                        }else{
-                            sheet_id += shared.alphabet[number];
-                        }
-                    }else{
-                        sheet_id += String(number);
-                    }
-                }
-                i++;
-            }while((this.sheets[sheet_id] !== undefined) & i < 10);
-        }
+        sheet_id = this.generateId(4);
         if(sheet_id == ""){
             throw new Error("Generating new sheet id failed. (Try again and if it does not help you have too many sheets.)");
         }

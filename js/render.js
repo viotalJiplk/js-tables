@@ -29,7 +29,7 @@ class Sheetelem extends HTMLElement{
         let sheetid = this.getAttribute("data-sheet-name");
         if(sheetid == "" | sheetid == null | sheetid != undefined){
             sheetid = "";
-            for(let i = 0; i<100; i++){
+            for(let i = 0; i<51; i++){
                 let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
                 if(number >= 10){
                     number -= 10;
@@ -215,7 +215,7 @@ class Sheetelem extends HTMLElement{
     }
 }
 
- class renderView{
+class renderView{
     onchange = function(e){
         console.log("render received msg:");
         console.log(e);
@@ -269,9 +269,15 @@ document.addEventListener("click", function(e){
 
 document.getElementById("addsheet").addEventListener("click",function() {
     let sheetName = prompt("Input new sheet name.");
-    Array.from(document.getElementById("spreadsheet-wrapper").getElementsByClassName("active"))[0].className = "";
-    Array.from(document.getElementById("sheet-row").getElementsByClassName("active"))[0].className = "";
-    render.createSheet(sheetName);    
+    if(sheetName.length > 50){
+        alert("Name too long.");
+    }else if(sheetName = ""){
+        alert("Provide at least 1 character");
+    }else{
+        Array.from(document.getElementById("spreadsheet-wrapper").getElementsByClassName("active"))[0].className = "";
+        Array.from(document.getElementById("sheet-row").getElementsByClassName("active"))[0].className = "";
+        render.createSheet(sheetName);    
+    }
 });
 
 customElements.define('sheet-custom', Sheetelem);
