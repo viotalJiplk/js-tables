@@ -318,18 +318,27 @@ class dataLayer{
     };
     #generateSheetId(){
         let sheet_id = ""
-        for(let i = 0; i<4; i++){
-            let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
-            if(number >= 10){
-                number -= 10;
-                if(number > shared.alphabet.length){
-                    sheet_id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
-                }else{
-                    sheet_id += shared.alphabet[number];
+        {
+            let i = 0;
+            do{
+                for(let i = 0; i<4; i++){
+                    let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
+                    if(number >= 10){
+                        number -= 10;
+                        if(number > shared.alphabet.length){
+                            sheet_id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
+                        }else{
+                            sheet_id += shared.alphabet[number];
+                        }
+                    }else{
+                        sheet_id += String(number);
+                    }
                 }
-            }else{
-                sheet_id += String(number);
-            }
+                i++;
+            }while((this.sheets[sheet_id] !== undefined) & i < 10);
+        }
+        if(sheet_id == ""){
+            throw new Error("Generating new sheet id failed. (Try again and if it does not help you have too many sheets.)");
         }
         return sheet_id;
     }
@@ -356,6 +365,7 @@ class dataLayer{
                 "sheetId": sheet_id
             }
         }
+        return name;
     }
 
     #renameSheet(old_name, new_name){
@@ -370,6 +380,7 @@ class dataLayer{
                 "sheetId": sheet_id
             }
             this.sheets[sheet_id].sheetName = new_name;
+            return new_name;
         }
     }
 
@@ -388,19 +399,22 @@ class dataLayer{
         console.log(e);
         try{
             if(e.type=="createSheet"){
-                this.#createSheet(e.sheet);
+                e.sheet = this.#createSheet(e.sheet);
                 render.onchange(e);
             }else if(e.type=="deleteSheet"){
                 this.#deleteSheet(e.sheet);
                 render.onchange(e);
             }else if(e.type=="renameSheet"){
-                this.#renameSheet(e.sheet, e.data.new_name);
+                e.sheet = this.#renameSheet(e.sheet, e.data.new_name);
                 render.onchange(e);
+            }else if(e.type=="getFreeSheetName"){
+                return this.#createSheet(e.sheet);
             }else{
                 let to_return = this.#getSheetByName(e.sheet).onchange(e);
                 render.onchange(to_return);
             }
         }catch(error){
+            console.error(error);
             render.onchange(new msgev("Error", e.sheet, {"req:": e, "errmsg":error.msg}));
         }
     }

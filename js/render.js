@@ -26,16 +26,58 @@ class Sheetelem extends HTMLElement{
     constructor(){
         super();
         this.attachShadow({mode: 'open'});
-        let sheetid = this.getAttribute("data-sheet-id");
+        let sheetid = this.getAttribute("data-sheet-name");
+        if(sheetid == "" | sheetid == null | sheetid != undefined){
+            sheetid = "";
+            for(let i = 0; i<100; i++){
+                let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
+                if(number >= 10){
+                    number -= 10;
+                    if(number > shared.alphabet.length){
+                        sheetid += shared.alphabet[number - shared.alphabet.length].toUpperCase();
+                    }else{
+                        sheetid += shared.alphabet[number];
+                    }
+                }else{
+                    sheetid += String(number);
+                }
+            }
+            try {
+                dataObject.onchange(new msgev("createSheet",sheetid));
+                this.setAttribute("data-sheet-name", sheetid);
+                this.setAttribute("id", "sheet_"+ sheetid);   
+            } catch (error) {
+                alert("Something very unlikely happened we will reload for you.");
+                location.reload();
+            }
+        }else{
+            dataObject.onchange(new msgev("createSheet",sheetid));
+        }
         this.setAttribute("id", "sheet_"+sheetid);
-        dataObject.onchange(new msgev("createSheet",sheetid));
-
         this.root_element = this;
         let link = document.createElement("link");
         link.setAttribute("rel","stylesheet");
         link.setAttribute("href", "css/spreadsheet.css");
         this.shadowRoot.append(this.generateSpreadsheet(50,50, sheetid), link);
     }
+
+    static get observedAttributes(){return ["data-sheet-name", "class"];}
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if(name == "data-sheet-name"){
+            if(oldValue){
+                dataObject.onchange(new msgev("renameSheet",oldValue, {"new_name": newValue}));
+                this.shadowRoot.firstChild.setAttribute("data-sheet-name", newValue);
+            }
+            //console.log(name, oldValue, newValue)
+        }else if(name == "class"){
+            if(oldValue =="" & newValue == "active"){
+                this.style.visibility = "visible";
+            }else if(oldValue =="active" & newValue == ""){
+                this.style.visibility = "hidden";
+            }
+        }
+    }      
 
     onchange = function(e){
         if(e.type == "contentArrayChange"){
@@ -54,8 +96,6 @@ class Sheetelem extends HTMLElement{
                 }
                 i++;
             }
-        }else if(e.type=="createSheet"){
-
         }else if(e.type=="deleteSheet"){
             
         }else if(e.type=="renameSheet"){
@@ -85,7 +125,7 @@ class Sheetelem extends HTMLElement{
         }
 
         let root = getroot(event.target);
-        let sheetid = root.getAttribute("data-sheet-id")
+        let sheetid = root.getAttribute("data-sheet-name")
         let active = Array.from(root.getElementsByClassName("active"))[0];
         if(active !== undefined){
             if(event.target !== active){
@@ -110,7 +150,7 @@ class Sheetelem extends HTMLElement{
 
         var spreadsheet = document.createElement("div");
         spreadsheet.className = "spreadsheet";
-        spreadsheet.setAttribute("data-sheet-id", sheetid)
+        spreadsheet.setAttribute("data-sheet-name", sheetid)
         spreadsheet.id = "spreadsheet";
 
         for (var row_number = 0; row_number <= height; row_number++) {
@@ -175,20 +215,65 @@ class Sheetelem extends HTMLElement{
     }
 }
 
-const render = {};
-render.onchange = function(e){
-    console.log("render received msg:");
-    console.log(e);
-    document.getElementById("sheet_"+e.sheet).onchange(e);;    
+ class renderView{
+    onchange = function(e){
+        console.log("render received msg:");
+        console.log(e);
+        if(e.type == "createSheet"){
+            //do nothing for now e.sheet could have only temporary sheetname now so we can't get it using its id
+        }else{
+            let curentSheet = document.getElementById("sheet_"+e.sheet);
+            if(curentSheet != null){
+                curentSheet.onchange(e); 
+            }
+        }
+    }
+
+    createSheet(name){
+        function createSheetIcon(sheetName){
+            let div = document.createElement("div");    
+            let input = document.createElement("input");
+            input.value = sheetName;
+            input.setAttribute("data-sheet-name", sheetName);
+            div.appendChild(input);
+            div.setAttribute("id", "sheetIcon_" + sheetName);
+            div.setAttribute("data-sheet-name", sheetName);
+            div.addEventListener("click", function(e){
+                Array.from(document.getElementById("spreadsheet-wrapper").getElementsByClassName("active"))[0].className = "";
+                Array.from(document.getElementById("sheet-row").getElementsByClassName("active"))[0].className = "";
+                if(e.target.nodeName == "DIV"){
+                    e.target.className = "active";
+                }else{
+                    e.target.parentElement.className = "active";
+                }
+                document.getElementById("sheet_" +e.target.getAttribute("data-sheet-name")).className = "active";
+            });
+            return div;
+        }
+        let newSheet = new Sheetelem()
+        newSheet.setAttribute("id", "sheet_" + name);
+        newSheet.setAttribute("data-sheet-name", name);
+        newSheet.className = "active"
+        document.getElementById("spreadsheet-wrapper").appendChild(newSheet);
+        let sheetIcon = createSheetIcon(name);
+        sheetIcon.className = "active";
+        document.getElementById("sheet-selector").appendChild(sheetIcon);
+    }
 }
+const render = new renderView();
 
 document.addEventListener("click", function(e){
     console.log(e);
     //SheetArray[0].testtosubmit(e);
 });
 
+document.getElementById("addsheet").addEventListener("click",function() {
+    let sheetName = prompt("Input new sheet name.");
+    Array.from(document.getElementById("spreadsheet-wrapper").getElementsByClassName("active"))[0].className = "";
+    Array.from(document.getElementById("sheet-row").getElementsByClassName("active"))[0].className = "";
+    render.createSheet(sheetName);    
+});
+
 customElements.define('sheet-custom', Sheetelem);
 
-/*
-console.log(document.getElementsByName(body));
-*/
+render.createSheet("newSheet");
