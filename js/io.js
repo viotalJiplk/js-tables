@@ -51,25 +51,23 @@ class CellCache{
 class Utils{
     generateId(length){
         let id = ""
-        {
-            let i = 0;
-            do{
-                for(let i = 0; i<length; i++){
-                    let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
-                    if(number >= 10){
-                        number -= 10;
-                        if(number > shared.alphabet.length){
-                            id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
-                        }else{
-                            id += shared.alphabet[number];
-                        }
+        let i = 0;
+        do{
+            for(let i = 0; i<length; i++){
+                let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
+                if(number >= 10){
+                    number -= 10;
+                    if(number > shared.alphabet.length){
+                        id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
                     }else{
-                        id += String(number);
+                        id += shared.alphabet[number];
                     }
+                }else{
+                    id += String(number);
                 }
-                i++;
-            }while((this.sheets[id] !== undefined) & i < 10);
-        }
+            }
+            i++;
+        }while((this.sheets[id] !== undefined) & i < 650);
         return id;
     }
 }
