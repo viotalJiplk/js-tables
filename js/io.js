@@ -51,23 +51,19 @@ class CellCache{
 class Utils{
     generateId(length){
         let id = ""
-        let i = 0;
-        do{
-            for(let i = 0; i<length; i++){
-                let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10)) - 1;
-                if(number >= 10){
-                    number -= 10;
-                    if(number > shared.alphabet.length){
-                        id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
-                    }else{
-                        id += shared.alphabet[number];
-                    }
+        for(let i = 0; i<length; i++){
+            let number = Math.floor(Math.random()*(shared.alphabet.length*2 + 10));
+            if(number >= 10){
+                number -= 10;
+                if(number > shared.alphabet.length){
+                    id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
                 }else{
-                    id += String(number);
+                    id += shared.alphabet[number];
                 }
+            }else{
+                id += String(number);
             }
-            i++;
-        }while((this.sheets[id] !== undefined) & i < 650);
+        }
         return id;
     }
 }
@@ -82,6 +78,7 @@ class Sheet extends Utils{
         "row":{},
         "column":{},
         "table":{},
+        "cellPointer":{}
     }
     #cache={
         "table":{},
@@ -94,6 +91,19 @@ class Sheet extends Utils{
         }else if(e.type=="contentRangeDiscovery"){
             return new msgev("contentArrayChange", e.sheet, {"location":e.data.locationrange.split(":")[0], "changed": this.getCellRangeContent(e.data.locationrange)})
         }
+    }
+
+    generateCellId(){
+        let cell_id = ""
+        let i = 0;
+        do{
+            cell_id = this.generateId(50);
+            i++;
+        }while((this.#data.table[cell_id] !== undefined) & i < 650);
+        if(cell_id == ""){
+            throw new Error("Generating new cell id failed. (Try again and if it does not help you have too many cells.)");
+        }
+        return cell_id;
     }
 
     /**
@@ -344,7 +354,11 @@ class dataLayer extends Utils{
     };
     #generateSheetId(){
         let sheet_id = ""
-        sheet_id = this.generateId(4);
+        let i =0;
+        do{
+            sheet_id = this.generateId(4);
+            i++
+        }while((this.sheets[sheet_id] !== undefined) & i < 650);
         if(sheet_id == ""){
             throw new Error("Generating new sheet id failed. (Try again and if it does not help you have too many sheets.)");
         }
