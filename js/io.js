@@ -48,6 +48,13 @@ class CellCache{
     }
 }
 
+class CellReference{
+    constructor(cellId, sheetId){
+        this.cellId = cellId;
+        this.sheetId = sheetId;
+    }
+}
+
 class Utils{
     generateId(length){
         let id = ""
@@ -56,7 +63,7 @@ class Utils{
             if(number >= 10){
                 number -= 10;
                 if(number > shared.alphabet.length){
-                    id += shared.alphabet[number - shared.alphabet.length].toUpperCase();
+                    id += shared.alphabet[number - shared.alphabet.length-1].toUpperCase();
                 }else{
                     id += shared.alphabet[number];
                 }
@@ -104,6 +111,14 @@ class Sheet extends Utils{
             throw new Error("Generating new cell id failed. (Try again and if it does not help you have too many cells.)");
         }
         return cell_id;
+    }
+
+    translateToCellId(cellName){
+        if(cellPointer[cellName] == undefined){
+            return null;
+        }else{
+            
+        }
     }
 
     /**

@@ -3,7 +3,8 @@ const shared = {
     "A1": /[A-Z]+\d+/,
     "A1column": /[A-Z]+/,
     "A1row": /\d+/,
-    "A1range": /[A-Z]+\d+:[A-Z]+\d+/
+    "A1range": /[A-Z]+\d+:[A-Z]+\d+/,
+    "A1withsheet": /(?!\\)"((\\\\)|(\\")|[^"])*(?<!\\)"![A-Z]+\d+(:[A-Z]+\d+)?/gm
   },
   "alphabet": []
 }
